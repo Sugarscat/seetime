@@ -1,3 +1,3 @@
-module 001try
+module hi-automation
 
 go 1.20
