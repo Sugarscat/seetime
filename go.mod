@@ -1,3 +1,3 @@
-module hi-automation
+module seetime
 
 go 1.20
