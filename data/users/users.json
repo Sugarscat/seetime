@@ -1,15 +1,1 @@
-{
-  "users": [
-    {
-      "id": 1,
-      "name": "hi",
-      "password": "123456"
-      
-    },
-    {
-      "id": 2,
-      "name": "qwe",
-      "password": "123456"
-    }
-  ]
-}
+{"users":[{"id":1,"name":"hi","password":"123456","identity":false,"permissions":{"situation":false,"addtask":false,"changetask":false,"deletetask":false,"downloadtask":false}}]}

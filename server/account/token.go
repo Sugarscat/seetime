@@ -28,6 +28,7 @@ func GenerateToken(id int, name string) string {
 	tokenSetting := jwt.NewWithClaims(jwt.SigningMethodHS256, MyJwtCustClaims)
 	token, err := tokenSetting.SignedString(jwtKey)
 	if err != nil {
+		// ---日志
 		return err.Error()
 	}
 	return token

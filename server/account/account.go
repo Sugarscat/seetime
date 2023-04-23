@@ -3,7 +3,9 @@ package account
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -16,46 +18,130 @@ var (
 )
 
 type adminJson struct {
-	Id       int
-	Name     string
-	Password string
+	Id       int    `json:"id"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	Identity bool   `json:"identity"`
+}
+
+type usersCom struct {
+	Id          int         `json:"id"`
+	Name        string      `json:"name"`
+	Password    string      `json:"password"`
+	Identity    bool        `json:"identity"`
+	Permissions Permissions `json:"permissions"`
 }
 
 type usersJson struct {
-	Users []struct {
-		Id       int
-		Name     string
-		Password string
-	}
+	Users []usersCom `json:"users"`
 }
 
-type permissions struct {
-	situation    bool // 系统信息
-	addTask      bool // 添加任务
-	changeTask   bool // 修改任务
-	deleteTask   bool // 删除任务
-	downloadTask bool // 下载任务
+type Permissions struct {
+	Situation    bool `json:"situation"`    // 系统信息
+	AddTask      bool `json:"addtask"`      // 添加任务
+	ChangeTask   bool `json:"changetask"`   // 修改任务
+	DeleteTask   bool `json:"deletetask"`   // 删除任务
+	DownloadTask bool `json:"downloadtask"` // 下载任务
 }
 
 type user struct {
-	Id         int
-	Name       string
-	Password   string
-	Token      string
-	Identity   bool        // 是否是管理员
-	LastIp     string      // 上次登录的IP
-	ClientIp   string      //本次登录的IP
-	LastTime   int64       //上次登录的时间
-	LoginTime  int64       //本次登录的时间
-	permission permissions //权限
+	Id          int
+	Name        string
+	Password    string
+	Token       string
+	Identity    bool        // 是否是管理员
+	LastIp      string      // 上次登录的IP
+	ClientIp    string      //本次登录的IP
+	LastTime    int64       //上次登录的时间
+	LoginTime   int64       //本次登录的时间
+	Permissions Permissions //权限
 }
 
-// 漏桶算法的桶定义
+// LeakyBucket 漏桶算法的桶定义
 type LeakyBucket struct {
 	capacity     float64   // 桶容量
 	rate         float64   // 漏水速率
 	water        float64   // 当前水量
 	lastLeakTime time.Time // 上次漏水时间
+}
+
+var EmptyPermissions = Permissions{
+	Situation:    false,
+	AddTask:      false,
+	ChangeTask:   false,
+	DeleteTask:   false,
+	DownloadTask: false,
+}
+
+// SaveInfo 保存用户信息
+func SaveInfo(id int) bool {
+
+	if id == 0 {
+		fileAdmin, err := os.OpenFile("./data/users/admin.json", os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			// ---日志
+			return false
+		}
+		defer fileAdmin.Close()
+
+		jsonDataA, err := json.Marshal(
+			adminJson{
+				Id:       0,
+				Name:     Users[0].Name,
+				Password: Users[0].Password,
+				Identity: true,
+			})
+		if err != nil {
+			// ---日志
+			return false
+		}
+
+		_, err = io.WriteString(fileAdmin, string(jsonDataA))
+		if err != nil {
+			// ---日志
+			return false
+		}
+
+		return true
+	}
+
+	fileUsers, err := os.OpenFile("./data/users/users.json", os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		fmt.Println("---文件读取")
+		// ---日志
+		return false
+	}
+	defer fileUsers.Close()
+
+	var usersJsonFile usersJson
+	usersJsonFile.Users = make([]usersCom, 0, 1)
+	for i, user := range Users {
+		if i == 0 {
+			continue
+		}
+		usersJsonFile.Users = append(usersJsonFile.Users, usersCom{
+			Id:          user.Id,
+			Name:        user.Name,
+			Password:    user.Password,
+			Identity:    user.Identity,
+			Permissions: user.Permissions})
+	}
+
+	jsonDataU, err := json.Marshal(usersJsonFile)
+	if err != nil {
+		fmt.Println("---解析json")
+		// ---日志
+		return false
+	}
+
+	_, err = io.WriteString(fileUsers, string(jsonDataU))
+	if err != nil {
+		fmt.Println("---保存文件")
+		// ---日志
+		return false
+	}
+
+	return true
 }
 
 // GetTime 转换时间
@@ -67,7 +153,7 @@ func GetTime(timestamp int64) string {
 	return datetime
 }
 
-// 获取请求 IP
+// GetIP 获取请求 IP
 func GetIP(r *http.Request) string {
 	forwarded := r.Header.Get("X-FORWARDED-FOR")
 	if forwarded != "" {
@@ -76,18 +162,7 @@ func GetIP(r *http.Request) string {
 	return r.RemoteAddr
 }
 
-// json 回复
-type Response struct {
-	Code    int    `json:"code"`    // 返回代码
-	Success bool   `json:"success"` // 验证成功
-	Message string `json:"message"` // 消息
-	Id      int    `json:"id"`
-	Token   string `json:"token"`
-	Time    string `json:"time"` // 上次登录时间
-	IP      string `json:"ip"`   // 上次登录IP
-}
-
-/* 漏桶算法 */
+// NewLeakyBucket /* 漏桶算法 */
 func NewLeakyBucket(capacity, rate float64) *LeakyBucket {
 	return &LeakyBucket{
 		capacity:     capacity,
@@ -125,22 +200,8 @@ func Max(x, y float64) float64 {
 
 /* 漏桶算法 END */
 
-// 添加回复
-func AddResponse(code int, success bool, message string, id int, token string, time string, ip string) Response {
-	return Response{
-		Code:    code,
-		Success: success,
-		Message: message,
-		Id:      id,
-		Token:   token,
-		Time:    time,
-		IP:      ip,
-	}
-}
-
 // AddInfo 添加信息，解析json
 func AddInfo(adminInfo []byte, userInfo []byte) {
-	defer openAPiLogin()
 
 	AdminInfo = adminInfo
 	UsersInfo = userInfo
@@ -160,13 +221,13 @@ func addAdmin() {
 		Name:     adminData.Name,
 		Password: adminData.Password,
 		Token:    "err",
-		Identity: true,
-		permission: permissions{
-			situation:    true,
-			addTask:      true,
-			changeTask:   true,
-			deleteTask:   true,
-			downloadTask: true,
+		Identity: adminData.Identity,
+		Permissions: Permissions{
+			Situation:    true,
+			AddTask:      true,
+			ChangeTask:   true,
+			DeleteTask:   true,
+			DownloadTask: true,
 		},
 	}
 
@@ -185,13 +246,13 @@ func addUser() {
 			Name:     userData.Users[i].Name,
 			Password: userData.Users[i].Password,
 			Token:    "err",
-			Identity: false,
-			permission: permissions{
-				situation:    false,
-				addTask:      false,
-				changeTask:   false,
-				deleteTask:   false,
-				downloadTask: false,
+			Identity: userData.Users[i].Identity,
+			Permissions: Permissions{
+				Situation:    userData.Users[i].Permissions.Situation,
+				AddTask:      userData.Users[i].Permissions.AddTask,
+				ChangeTask:   userData.Users[i].Permissions.ChangeTask,
+				DeleteTask:   userData.Users[i].Permissions.DeleteTask,
+				DownloadTask: userData.Users[i].Permissions.DownloadTask,
 			},
 		}
 		Users = append(Users, user)

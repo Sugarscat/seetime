@@ -19,10 +19,12 @@ func SendInfo() {
 func init() {
 	adminInfo, Err = ioutil.ReadFile("./data/Users/admin.json")
 	if Err != nil {
+		// ---日志
 		fmt.Println(1, Err)
 	}
 	usersInfo, Err = ioutil.ReadFile("./data/Users/Users.json")
 	if Err != nil {
+		// ---日志
 		fmt.Println(2, Err)
 	}
 }

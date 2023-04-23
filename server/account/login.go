@@ -6,30 +6,37 @@ import (
 	"time"
 )
 
-var refused = Response{
+type LoginResponse struct {
+	Code    int    `json:"code"`    // 返回代码
+	Success bool   `json:"success"` // 验证成功
+	Message string `json:"message"` // 消息
+	Id      int    `json:"id"`
+	Token   string `json:"token"`
+}
+
+var refused = LoginResponse{
 	Code:    429,
 	Success: false,
 	Message: "请求次数过多",
 	Id:      -1,
 	Token:   "error",
-	Time:    "",
-	IP:      "",
 }
 
 var bucket = NewLeakyBucket(6, 0.1) // 桶
 
-func openAPiLogin() {
-	http.HandleFunc("/api/login", HandleLogin)
-	http.HandleFunc("/api/me", HandleMe)
-	err := http.ListenAndServe(":6060", nil)
-	if err != nil {
-		return
+func AddLoginResponse(code int, success bool, message string, id int, token string) LoginResponse {
+	return LoginResponse{
+		Code:    code,
+		Success: success,
+		Message: message,
+		Id:      id,
+		Token:   token,
 	}
 }
 
 // checkInfo 检测信息
-func checkInfo(name string, password string, r *http.Request) Response {
-	var response Response
+func checkInfo(name string, password string, r *http.Request) LoginResponse {
+	var response LoginResponse
 	var allowPass bool
 
 	for _, user := range Users {
@@ -41,7 +48,7 @@ func checkInfo(name string, password string, r *http.Request) Response {
 			Users[user.Id].ClientIp = GetIP(r)
 			Users[user.Id].LastTime = Users[user.Id].LoginTime
 			Users[user.Id].LoginTime = time.Now().Unix()
-			response = AddResponse(200, true, "验证成功", user.Id, token, GetTime(user.LastTime), user.LastIp)
+			response = AddLoginResponse(200, true, "验证成功", user.Id, token)
 			return response
 		}
 		allowPass = false
@@ -53,7 +60,7 @@ func checkInfo(name string, password string, r *http.Request) Response {
 		}
 	}
 
-	response = AddResponse(404, false, "用户名或密码错误", -1, "error", "", "")
+	response = AddLoginResponse(404, false, "用户名或密码错误", -1, "error")
 	return response
 }
 
@@ -63,14 +70,17 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	password := r.FormValue("password")
 	response := checkInfo(name, password, r)
-	jsonBytes, err := json.Marshal(response)
 
+	jsonBytes, err := json.Marshal(response)
 	if err != nil {
+		// ---日志
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(jsonBytes)
 	if err != nil {
+		// ---日志
 		return
 	}
 }
