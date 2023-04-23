@@ -1,5 +1,9 @@
 package main
 
-func main() {
+import (
+	"seetime/server"
+)
 
+func main() {
+	server.SendInfo()
 }
