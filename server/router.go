@@ -12,6 +12,7 @@ func openAPi() {
 	http.HandleFunc("/api/me/change", account.HandleMeChange)
 
 	http.HandleFunc("/api/user", account.HandleUser)
+	http.HandleFunc("/api/user/manage", account.HandleUserManage)
 	err := http.ListenAndServe(":6060", nil)
 	if err != nil {
 		// ---日志

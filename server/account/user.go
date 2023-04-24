@@ -20,21 +20,58 @@ type UsersResponse struct {
 }
 
 type UserResponse struct {
-	Code    int    `json:"code"`    // 返回代码
-	Success bool   `json:"success"` // 验证成功
-	Message string `json:"message"` // 消息
-	Request int    `json:"request"` // 请求的id
-	Id      int    `json:"id"`      // 添加/修改/删除的id
+	Code      int    `json:"code"`    // 返回代码
+	Success   bool   `json:"success"` // 验证成功
+	Message   string `json:"message"` // 消息
+	RequestId int    `json:"request"` // 请求的id
+	userId    int    `json:"id"`      // 添加/修改/删除的id
+}
+
+var userList = make([]UsersList, 0, 1)
+
+func addUserList() []UsersList {
+	for _, user := range Users {
+		aUser := UsersList{
+			Id:       user.Id,
+			Name:     user.Name,
+			Identity: user.Identity,
+		}
+		userList = append(userList, aUser)
+	}
+	return userList
 }
 
 func AddUserResponse(code int, success bool, message string, request int, id int) UserResponse {
 	return UserResponse{
-		Code:    code,
-		Success: success,
-		Message: message,
-		Request: request,
-		Id:      id,
+		Code:      code,
+		Success:   success,
+		Message:   message,
+		RequestId: request,
+		userId:    id,
 	}
+}
+
+func ChangeUsersInfo(code string, id int, userid int, name string, pwd string, identity string, permissions string) UserResponse {
+	var response UserResponse
+
+	switch code {
+	case "1": // 增
+
+	case "2": // 删
+
+	case "3": // 改
+
+	default:
+		response = UserResponse{
+			Code:      404,
+			Success:   false,
+			Message:   "未知代码",
+			RequestId: id,
+			userId:    userid,
+		}
+	}
+
+	return response
 }
 
 func HandleUser(writer http.ResponseWriter, request *http.Request) {
@@ -46,7 +83,7 @@ func HandleUser(writer http.ResponseWriter, request *http.Request) {
 
 	for _, user := range Users {
 		if strconv.Itoa(user.Id) == id && user.Token == token {
-			if user.Identity {
+			if !user.Identity {
 				response = UsersResponse{
 					Code:      403,
 					Success:   false,
@@ -59,7 +96,7 @@ func HandleUser(writer http.ResponseWriter, request *http.Request) {
 				Code:      200,
 				Success:   true,
 				Message:   "加载成功",
-				UsersList: nil,
+				UsersList: addUserList(),
 			}
 			break
 		}
@@ -83,26 +120,30 @@ func HandleUser(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func HandleUserAdd(writer http.ResponseWriter, request *http.Request) {
+func HandleUserManage(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 
+	code := request.FormValue("code")
 	id := request.FormValue("id")
 	token := request.FormValue("token")
+	userId := request.FormValue("userid")
 	name := request.FormValue("name")
 	password := request.FormValue("password")
-	// identity := request.FormValue("identity")
-	var response MeResponse
+	identity := request.FormValue("identity")
+	permissions := request.FormValue("permissions")
+	var response UserResponse
 
 	for _, user := range Users {
 		if strconv.Itoa(user.Id) == id && user.Token == token {
-			if user.Identity {
-				response = AddMeResponse(403, false, "无权限", -1, "error", "", "", EmptyPermissions)
+			userid, _ := strconv.Atoi(userId)
+			if !user.Identity {
+				response = AddUserResponse(403, false, "无权限", user.Id, userid)
 				break
 			}
-			response = changeMeInfo(user.Id, name, password)
+			response = ChangeUsersInfo(code, user.Id, userid, name, password, identity, permissions)
 			break
 		}
-		response = AddMeResponse(403, false, "身份令牌过期，请重新登录", -1, "error", "", "", EmptyPermissions)
+		response = AddUserResponse(403, false, "身份令牌过期，请重新登录", user.Id, -1)
 	}
 
 	jsonBytes, err := json.Marshal(response)

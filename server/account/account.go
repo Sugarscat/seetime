@@ -25,11 +25,11 @@ type adminJson struct {
 }
 
 type usersCom struct {
-	Id          int         `json:"id"`
-	Name        string      `json:"name"`
-	Password    string      `json:"password"`
-	Identity    bool        `json:"identity"`
-	Permissions Permissions `json:"permissions"`
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Password    string `json:"password"`
+	Identity    bool   `json:"identity"`
+	Permissions int    `json:"permissions"`
 }
 
 type usersJson struct {
@@ -49,12 +49,12 @@ type user struct {
 	Name        string
 	Password    string
 	Token       string
-	Identity    bool        // 是否是管理员
-	LastIp      string      // 上次登录的IP
-	ClientIp    string      //本次登录的IP
-	LastTime    int64       //上次登录的时间
-	LoginTime   int64       //本次登录的时间
-	Permissions Permissions //权限
+	Identity    bool   // 是否是管理员
+	LastIp      string // 上次登录的IP
+	ClientIp    string //本次登录的IP
+	LastTime    int64  //上次登录的时间
+	LoginTime   int64  //本次登录的时间
+	Permissions int    //权限
 }
 
 // LeakyBucket 漏桶算法的桶定义
@@ -63,14 +63,6 @@ type LeakyBucket struct {
 	rate         float64   // 漏水速率
 	water        float64   // 当前水量
 	lastLeakTime time.Time // 上次漏水时间
-}
-
-var EmptyPermissions = Permissions{
-	Situation:    false,
-	AddTask:      false,
-	ChangeTask:   false,
-	DeleteTask:   false,
-	DownloadTask: false,
 }
 
 // SaveInfo 保存用户信息
@@ -82,7 +74,12 @@ func SaveInfo(id int) bool {
 			// ---日志
 			return false
 		}
-		defer fileAdmin.Close()
+		defer func(fileAdmin *os.File) {
+			err := fileAdmin.Close()
+			if err != nil {
+
+			}
+		}(fileAdmin)
 
 		jsonDataA, err := json.Marshal(
 			adminJson{
@@ -111,7 +108,12 @@ func SaveInfo(id int) bool {
 		// ---日志
 		return false
 	}
-	defer fileUsers.Close()
+	defer func(fileUsers *os.File) {
+		err := fileUsers.Close()
+		if err != nil {
+
+		}
+	}(fileUsers)
 
 	var usersJsonFile usersJson
 	usersJsonFile.Users = make([]usersCom, 0, 1)
@@ -217,18 +219,12 @@ func addAdmin() {
 	}
 
 	admin := user{
-		Id:       adminData.Id,
-		Name:     adminData.Name,
-		Password: adminData.Password,
-		Token:    "err",
-		Identity: adminData.Identity,
-		Permissions: Permissions{
-			Situation:    true,
-			AddTask:      true,
-			ChangeTask:   true,
-			DeleteTask:   true,
-			DownloadTask: true,
-		},
+		Id:          adminData.Id,
+		Name:        adminData.Name,
+		Password:    adminData.Password,
+		Token:       "null",
+		Identity:    adminData.Identity,
+		Permissions: 11111,
 	}
 
 	Users = append(Users, admin)
@@ -242,18 +238,12 @@ func addUser() {
 
 	for i := 0; i < len(userData.Users); i++ {
 		user := user{
-			Id:       userData.Users[i].Id,
-			Name:     userData.Users[i].Name,
-			Password: userData.Users[i].Password,
-			Token:    "err",
-			Identity: userData.Users[i].Identity,
-			Permissions: Permissions{
-				Situation:    userData.Users[i].Permissions.Situation,
-				AddTask:      userData.Users[i].Permissions.AddTask,
-				ChangeTask:   userData.Users[i].Permissions.ChangeTask,
-				DeleteTask:   userData.Users[i].Permissions.DeleteTask,
-				DownloadTask: userData.Users[i].Permissions.DownloadTask,
-			},
+			Id:          userData.Users[i].Id,
+			Name:        userData.Users[i].Name,
+			Password:    userData.Users[i].Password,
+			Token:       "null",
+			Identity:    userData.Users[i].Identity,
+			Permissions: userData.Users[i].Permissions,
 		}
 		Users = append(Users, user)
 	}
