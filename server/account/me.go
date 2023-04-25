@@ -27,8 +27,8 @@ type MeUpdateResponse struct {
 	Message string `json:"message"` // 消息
 }
 
-// AddMeResponse 添加回复
-func AddMeResponse(code int, success bool, message string, id int, time string, ip string, permissions int) MeInfoResponse {
+// AddMeInfoResponse 添加回复
+func AddMeInfoResponse(code int, success bool, message string, id int, time string, ip string, permissions int) MeInfoResponse {
 	return MeInfoResponse{
 		Code:        code,
 		Success:     success,
@@ -40,37 +40,29 @@ func AddMeResponse(code int, success bool, message string, id int, time string, 
 	}
 }
 
+func AddMeUpdateResponse(code int, success bool, message string) MeUpdateResponse {
+	return MeUpdateResponse{
+		Code:    code,
+		Success: success,
+		Message: message,
+	}
+}
+
 func UpdateMeInfo(id int, name string, password string) MeUpdateResponse {
 	if id == 0 && Users[id].Name != name {
-		return MeUpdateResponse{
-			Code:    403,
-			Success: false,
-			Message: "不可修改根管理员用户名，如需修改请在服务器上修改文件",
-		}
+		return AddMeUpdateResponse(403, false, "不可修改根管理员用户名，如需修改请在服务器上修改文件")
 	}
 	for _, user := range Users {
 		if name == user.Name && user.Id != id {
-			return MeUpdateResponse{
-				Code:    403,
-				Success: false,
-				Message: "存在相同用户名",
-			}
+			return AddMeUpdateResponse(403, false, "存在相同用户名")
 		}
 	}
 	Users[id].Name = name
 	Users[id].Password = password
 	if !SaveInfo(id) {
-		return MeUpdateResponse{
-			Code:    404,
-			Success: false,
-			Message: "修改失败，请重试",
-		}
+		return AddMeUpdateResponse(404, false, "修改失败，请重试")
 	}
-	return MeUpdateResponse{
-		Code:    200,
-		Success: true,
-		Message: "修改成功",
-	}
+	return AddMeUpdateResponse(200, true, "修改成功")
 }
 
 func HandleMe(ctx *gin.Context) {
@@ -108,11 +100,7 @@ func HandleMeUpdate(ctx *gin.Context) {
 	if success {
 		response = UpdateMeInfo(id, name, password)
 	} else {
-		response = MeUpdateResponse{
-			Code:    403,
-			Success: false,
-			Message: "身份令牌过期，请重新登录",
-		}
+		response = AddMeUpdateResponse(403, false, "身份令牌过期，请重新登录")
 	}
 
 	ctx.JSON(200, response)
@@ -125,9 +113,9 @@ func HandleMeInfo(ctx *gin.Context) {
 	success, id := ChecKToken(token)
 
 	if success {
-		response = AddMeResponse(200, true, "认证成功", id, GetTime(Users[id].LastTime), Users[id].LastIp, Users[id].Permissions)
+		response = AddMeInfoResponse(200, true, "认证成功", id, GetTime(Users[id].LastTime), Users[id].LastIp, Users[id].Permissions)
 	} else {
-		response = AddMeResponse(403, false, "身份令牌过期，请重新登录", -1, "null", "null", 0)
+		response = AddMeInfoResponse(403, false, "身份令牌过期，请重新登录", -1, "null", "null", 0)
 	}
 
 	ctx.JSON(200, response)
