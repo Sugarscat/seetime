@@ -12,11 +12,16 @@ type UsersList struct {
 	Identity bool   `json:"identity"`
 }
 
+type Data struct {
+	Total   int         `json:"total"`
+	Content []UsersList `json:"content"`
+}
+
 type UsersListResponse struct {
-	Code      int         `json:"code"`    // 返回代码
-	Success   bool        `json:"success"` // 验证成功
-	Message   string      `json:"message"` // 消息
-	UsersList []UsersList `json:"userslist"`
+	Code    int    `json:"code"`    // 返回代码
+	Success bool   `json:"success"` // 验证成功
+	Message string `json:"message"` // 消息
+	Data    Data   `json:"data"`
 }
 
 type UserResponse struct {
@@ -42,10 +47,13 @@ func addUsersList() []UsersList {
 
 func AddUsersListResponse(code int, success bool, message string, userslist []UsersList) UsersListResponse {
 	return UsersListResponse{
-		Code:      code,
-		Success:   success,
-		Message:   message,
-		UsersList: userslist,
+		Code:    code,
+		Success: success,
+		Message: message,
+		Data: Data{
+			Total:   len(userslist),
+			Content: userslist,
+		},
 	}
 }
 
