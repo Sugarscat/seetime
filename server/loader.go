@@ -1,28 +1,61 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"seetime/server/account"
 )
 
+type adminFile struct {
+	Id       int    `json:"id"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	Identity bool   `json:"identity"`
+}
+
 var (
-	adminInfo []byte // 读取json文件
-	usersInfo []byte
-	err       error
+	adminFilePlace = "./data/Users/admin.json"
+	usersFilePlace = "./data/Users/Users.json"
+	adminInfo      []byte // 读取json文件
+	usersInfo      []byte
+	err            error
 )
+
+func CreateAdminFile() {
+	fileData := adminFile{
+		Id:       0,
+		Name:     "admin",
+		Password: "QWQTime",
+		Identity: true,
+	}
+	file, err := os.Create(adminFilePlace)
+	if err != nil {
+		fmt.Println(err) // ---日志
+	}
+
+	fileJson, _ := json.Marshal(fileData)
+	file.Truncate(0)
+	_, err = file.WriteString(string(fileJson))
+	if err != nil {
+		fmt.Println(err) // ---日志
+	}
+
+	defer file.Close()
+}
 
 func SendInfo() {
 	account.AddUser(adminInfo, usersInfo)
 }
 
 func init() {
-	adminInfo, err = os.ReadFile("./data/Users/admin.json")
+	adminInfo, err = os.ReadFile(adminFilePlace)
 	if err != nil {
-		fmt.Println(err) // ---日志
+		CreateAdminFile()
 	}
-	usersInfo, err = os.ReadFile("./data/Users/Users.json")
-	if err != nil {
-		fmt.Println(err) // ---日志
-	}
+
+	defer func() {
+		adminInfo, _ = os.ReadFile(adminFilePlace)
+		usersInfo, _ = os.ReadFile(usersFilePlace)
+	}()
 }

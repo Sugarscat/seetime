@@ -22,6 +22,9 @@ func openAPi() {
 	r.GET("/api/me/info", account.HandleMeInfo)
 
 	r.GET("/api/users", account.HandleUsers)
+	r.POST("/api/users", account.HandleUsersAdd)
+	r.PUT("/api/users", account.HandleUsersUpdate)
+	r.DELETE("/api/users", account.HandleUsersDelete)
 
 	r.Run(":6060")
 }

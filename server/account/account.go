@@ -13,7 +13,7 @@ var (
 	UsersInfo []byte
 	adminData adminJson // 解析json文件
 	userData  usersJson
-	Users     = make([]user, 0, 1)
+	Users     = make([]User, 0, 1)
 )
 
 type adminJson struct {
@@ -43,7 +43,7 @@ type Permissions struct {
 	DownloadTask bool `json:"downloadtask"` // 下载任务
 }
 
-type user struct {
+type User struct {
 	Id          int
 	Name        string
 	Password    string
@@ -92,6 +92,7 @@ func SaveInfo(id int) bool {
 			return false
 		}
 
+		fileAdmin.Truncate(0)
 		_, err = io.WriteString(fileAdmin, string(jsonDataA))
 		if err != nil {
 			fmt.Println(err) // ---日志
@@ -133,6 +134,7 @@ func SaveInfo(id int) bool {
 		return false
 	}
 
+	fileUsers.Truncate(0)
 	_, err = io.WriteString(fileUsers, string(jsonDataU))
 	if err != nil {
 		fmt.Println(err) // ---日志
@@ -205,7 +207,7 @@ func addAdmin() {
 		fmt.Println(err) // ---日志
 	}
 
-	admin := user{
+	admin := User{
 		Id:          adminData.Id,
 		Name:        adminData.Name,
 		Password:    adminData.Password,
@@ -224,7 +226,7 @@ func addUser() {
 	}
 
 	for i := 0; i < len(userData.Users); i++ {
-		user := user{
+		user := User{
 			Id:          userData.Users[i].Id,
 			Name:        userData.Users[i].Name,
 			Password:    userData.Users[i].Password,

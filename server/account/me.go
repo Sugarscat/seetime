@@ -50,17 +50,17 @@ func AddMeUpdateResponse(code int, success bool, message string) MeUpdateRespons
 
 func UpdateMeInfo(id int, name string, password string) MeUpdateResponse {
 	if id == 0 && Users[id].Name != name {
-		return AddMeUpdateResponse(403, false, "不可修改根管理员用户名，如需修改请在服务器上修改文件")
+		return AddMeUpdateResponse(423, false, "不可修改根管理员用户名，如需修改请在服务器上修改文件")
 	}
 	for _, user := range Users {
 		if name == user.Name && user.Id != id {
-			return AddMeUpdateResponse(403, false, "存在相同用户名")
+			return AddMeUpdateResponse(409, false, "重复用户名")
 		}
 	}
 	Users[id].Name = name
 	Users[id].Password = password
 	if !SaveInfo(id) {
-		return AddMeUpdateResponse(404, false, "修改失败，请重试")
+		return AddMeUpdateResponse(500, false, "修改失败，请重试")
 	}
 	return AddMeUpdateResponse(200, true, "修改成功")
 }
