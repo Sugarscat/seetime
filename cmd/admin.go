@@ -3,32 +3,60 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 )
 
 var (
-	data []byte
-	err  error
+	err            error
+	adminInfo      []byte
+	adminFilePlace = "./data/Users/admin.json"
 )
 
-type Admin struct {
-	Id       int
-	Name     string
-	Password string
+type adminFile struct {
+	Id       int    `json:"id"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	Identity bool   `json:"identity"`
 }
 
 func getPwd() {
-	var admin Admin
-	err = json.Unmarshal(data, &admin)
+	var admin adminFile
+	err = json.Unmarshal(adminInfo, &admin)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err) // ---日志
 	}
 	fmt.Println(admin.Password)
 }
 
-func init() {
-	data, err = ioutil.ReadFile("./data/users/admin.json")
-	if err != nil {
-		fmt.Println(err)
+func createAdminFile() {
+	fileData := adminFile{
+		Id:       0,
+		Name:     "admin",
+		Password: "QWQTime",
+		Identity: true,
 	}
+	file, err := os.Create(adminFilePlace)
+	if err != nil {
+		fmt.Println(err) // ---日志
+	}
+
+	fileJson, _ := json.Marshal(fileData)
+	file.Truncate(0)
+	_, err = file.WriteString(string(fileJson))
+	if err != nil {
+		fmt.Println(err) // ---日志
+	}
+
+	defer file.Close()
+}
+
+func init() {
+	adminInfo, err = os.ReadFile(adminFilePlace)
+	if err != nil {
+		createAdminFile()
+	}
+
+	defer func() {
+		adminInfo, _ = os.ReadFile(adminFilePlace)
+	}()
 }
