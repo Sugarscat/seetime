@@ -19,7 +19,6 @@ func openAPi() {
 
 	r.GET("/api/me", account.HandleMe)
 	r.PUT("/api/me", account.HandleMeUpdate)
-	r.GET("/api/me/info", account.HandleMeInfo)
 
 	r.GET("/api/users", account.HandleUsers)
 	r.POST("/api/users", account.HandleUsersAdd)

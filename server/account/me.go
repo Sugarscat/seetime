@@ -15,12 +15,6 @@ type MeInfoResponse struct {
 	Permissions int    `json:"permissions"` // 权限
 }
 
-type MeResponse struct {
-	Code    int    `json:"code"`    // 返回代码
-	Success bool   `json:"success"` // 验证成功
-	Message string `json:"message"` // 消息
-}
-
 type MeUpdateResponse struct {
 	Code    int    `json:"code"`    // 返回代码
 	Success bool   `json:"success"` // 验证成功
@@ -66,24 +60,15 @@ func UpdateMeInfo(id int, name string, password string) MeUpdateResponse {
 }
 
 func HandleMe(ctx *gin.Context) {
-	var response MeResponse
+	var response MeInfoResponse
 	token := ctx.Request.Header.Get("Authorization")
 
-	success, _ := ChecKToken(token)
+	success, id := ChecKToken(token)
 
 	if success {
-		response = MeResponse{
-			Code:    200,
-			Success: true,
-			Message: "认证成功",
-		}
+		response = AddMeInfoResponse(200, true, "认证成功", id, GetTime(Users[id].LastTime), Users[id].LastIp, Users[id].Permissions)
 	} else {
-		response = MeResponse{
-			Code:    403,
-			Success: false,
-			Message: "身份令牌过期，请重新登录",
-		}
-
+		response = AddMeInfoResponse(403, false, "身份令牌过期，请重新登录", -1, "null", "null", 0)
 	}
 
 	ctx.JSON(200, response)
@@ -101,21 +86,6 @@ func HandleMeUpdate(ctx *gin.Context) {
 		response = UpdateMeInfo(id, name, password)
 	} else {
 		response = AddMeUpdateResponse(403, false, "身份令牌过期，请重新登录")
-	}
-
-	ctx.JSON(200, response)
-}
-
-func HandleMeInfo(ctx *gin.Context) {
-	var response MeInfoResponse
-	token := ctx.Request.Header.Get("Authorization")
-
-	success, id := ChecKToken(token)
-
-	if success {
-		response = AddMeInfoResponse(200, true, "认证成功", id, GetTime(Users[id].LastTime), Users[id].LastIp, Users[id].Permissions)
-	} else {
-		response = AddMeInfoResponse(403, false, "身份令牌过期，请重新登录", -1, "null", "null", 0)
 	}
 
 	ctx.JSON(200, response)
