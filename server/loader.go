@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"io/ioutil"
 	"seetime/server/account"
 )
@@ -18,10 +19,10 @@ func SendInfo() {
 func init() {
 	adminInfo, err = ioutil.ReadFile("./data/Users/admin.json")
 	if err != nil {
-		// ---日志
+		fmt.Println(err) // ---日志
 	}
 	usersInfo, err = ioutil.ReadFile("./data/Users/Users.json")
 	if err != nil {
-		// ---日志
+		fmt.Println(err) // ---日志
 	}
 }

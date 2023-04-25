@@ -22,6 +22,7 @@ func openAPi() {
 	r.GET("/api/me/info", account.HandleMeInfo)
 
 	r.GET("/api/users", account.HandleUsers)
+
 	r.Run(":6060")
 }
 

@@ -70,13 +70,13 @@ func SaveInfo(id int) bool {
 	if id == 0 {
 		fileAdmin, err := os.OpenFile("./data/users/admin.json", os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
-			// ---日志
+			fmt.Println(err) // ---日志
 			return false
 		}
 		defer func(fileAdmin *os.File) {
 			err := fileAdmin.Close()
 			if err != nil {
-
+				fmt.Println(err) // ---日志
 			}
 		}(fileAdmin)
 
@@ -88,13 +88,13 @@ func SaveInfo(id int) bool {
 				Identity: true,
 			})
 		if err != nil {
-			// ---日志
+			fmt.Println(err) // ---日志
 			return false
 		}
 
 		_, err = io.WriteString(fileAdmin, string(jsonDataA))
 		if err != nil {
-			// ---日志
+			fmt.Println(err) // ---日志
 			return false
 		}
 
@@ -103,14 +103,13 @@ func SaveInfo(id int) bool {
 
 	fileUsers, err := os.OpenFile("./data/users/users.json", os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
-		fmt.Println("---文件读取")
-		// ---日志
+		fmt.Println(err) // ---日志
 		return false
 	}
 	defer func(fileUsers *os.File) {
 		err := fileUsers.Close()
 		if err != nil {
-
+			fmt.Println(err) // ---日志
 		}
 	}(fileUsers)
 
@@ -130,15 +129,13 @@ func SaveInfo(id int) bool {
 
 	jsonDataU, err := json.Marshal(usersJsonFile)
 	if err != nil {
-		fmt.Println("---解析json")
-		// ---日志
+		fmt.Println(err) // ---日志
 		return false
 	}
 
 	_, err = io.WriteString(fileUsers, string(jsonDataU))
 	if err != nil {
-		fmt.Println("---保存文件")
-		// ---日志
+		fmt.Println(err) // ---日志
 		return false
 	}
 
@@ -203,9 +200,9 @@ func AddUser(adminInfo []byte, userInfo []byte) {
 }
 
 func addAdmin() {
-	Err := json.Unmarshal(AdminInfo, &adminData)
-	if Err != nil {
-		fmt.Println(3, Err)
+	err := json.Unmarshal(AdminInfo, &adminData)
+	if err != nil {
+		fmt.Println(err) // ---日志
 	}
 
 	admin := user{
@@ -221,9 +218,9 @@ func addAdmin() {
 }
 
 func addUser() {
-	Err := json.Unmarshal(UsersInfo, &userData)
-	if Err != nil {
-		fmt.Println(4, Err)
+	err := json.Unmarshal(UsersInfo, &userData)
+	if err != nil {
+		fmt.Println(err) // ---日志
 	}
 
 	for i := 0; i < len(userData.Users); i++ {

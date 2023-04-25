@@ -1,6 +1,7 @@
 package account
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -49,8 +50,8 @@ func GenerateToken(id int, name string) string {
 	tokenSetting := jwt.NewWithClaims(jwt.SigningMethodHS256, MyJwtCustClaims)
 	token, err := tokenSetting.SignedString(jwtKey)
 	if err != nil {
-		// ---日志
-		return err.Error()
+		fmt.Println(err)
+		return "null"
 	}
 	return token
 }
