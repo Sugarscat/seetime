@@ -27,9 +27,8 @@ type UserResponse struct {
 	UserId    int    `json:"id"`      // 添加/修改/删除的id
 }
 
-var usersList = make([]UsersList, 0, 1)
-
 func addUsersList() []UsersList {
+	var usersList = make([]UsersList, 0, 1)
 	for _, user := range Users {
 		aUser := UsersList{
 			Id:       user.Id,
@@ -69,6 +68,12 @@ func checkUserName(name string, id int) bool {
 	return true
 }
 
+func ReloadUsersInfo() {
+	for id, user := range Users {
+		user.Id = id
+	}
+}
+
 func HandleUsersDelete(ctx *gin.Context) {
 	var response UserResponse
 	id, _ := strconv.Atoi(ctx.Query("id"))
@@ -80,6 +85,7 @@ func HandleUsersDelete(ctx *gin.Context) {
 		if Users[requestId].Identity && id != 0 {
 			if id < len(Users) && id > -1 {
 				Users = append(Users[:id], Users[id+1:]...)
+				ReloadUsersInfo()
 				if SaveInfo(-1) {
 					response = AddUserResponse(200, true, "删除成功", requestId, id)
 				} else {
