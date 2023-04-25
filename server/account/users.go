@@ -7,9 +7,10 @@ import (
 )
 
 type UsersList struct {
-	Id       int    `json:"id"`
-	Name     string `json:"name"`
-	Identity bool   `json:"identity"`
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Identity    bool   `json:"identity"`
+	Permissions int    `json:"permissions"`
 }
 
 type Data struct {
@@ -36,9 +37,10 @@ func addUsersList() []UsersList {
 	var usersList = make([]UsersList, 0, 1)
 	for _, user := range Users {
 		aUser := UsersList{
-			Id:       user.Id,
-			Name:     user.Name,
-			Identity: user.Identity,
+			Id:          user.Id,
+			Name:        user.Name,
+			Identity:    user.Identity,
+			Permissions: user.Permissions,
 		}
 		usersList = append(usersList, aUser)
 	}
