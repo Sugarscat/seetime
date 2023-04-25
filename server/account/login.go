@@ -1,9 +1,9 @@
 package account
 
 import (
-	"encoding/json"
-	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type LoginResponse struct {
@@ -35,7 +35,7 @@ func AddLoginResponse(code int, success bool, message string, id int, token stri
 }
 
 // checkInfo 检测信息
-func checkInfo(name string, password string, r *http.Request) LoginResponse {
+func checkInfo(name string, password string, ctx *gin.Context) LoginResponse {
 	var response LoginResponse
 	var allowPass bool
 
@@ -45,7 +45,7 @@ func checkInfo(name string, password string, r *http.Request) LoginResponse {
 			token := GenerateToken(user.Id, user.Name)
 			Users[user.Id].Token = token
 			Users[user.Id].LastIp = Users[user.Id].ClientIp
-			Users[user.Id].ClientIp = GetIP(r)
+			Users[user.Id].ClientIp = ctx.ClientIP()
 			Users[user.Id].LastTime = Users[user.Id].LoginTime
 			Users[user.Id].LoginTime = time.Now().Unix()
 			response = AddLoginResponse(200, true, "验证成功", user.Id, token)
@@ -65,24 +65,13 @@ func checkInfo(name string, password string, r *http.Request) LoginResponse {
 }
 
 // HandleLogin 登录
-func HandleLogin(w http.ResponseWriter, r *http.Request) {
+func HandleLogin(ctx *gin.Context) {
 
-	name := r.FormValue("name")
-	password := r.FormValue("password")
-	response := checkInfo(name, password, r)
+	name := ctx.Query("name")
+	password := ctx.Query("pwd")
+	response := checkInfo(name, password, ctx)
 
-	jsonBytes, err := json.Marshal(response)
-	if err != nil {
-		// ---日志
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(jsonBytes)
-	if err != nil {
-		// ---日志
-		return
-	}
+	ctx.JSON(200, response)
 }
 
 func init() {

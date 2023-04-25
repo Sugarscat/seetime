@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"time"
 )
@@ -155,15 +154,6 @@ func GetTime(timestamp int64) string {
 	return datetime
 }
 
-// GetIP 获取请求 IP
-func GetIP(r *http.Request) string {
-	forwarded := r.Header.Get("X-FORWARDED-FOR")
-	if forwarded != "" {
-		return forwarded
-	}
-	return r.RemoteAddr
-}
-
 // NewLeakyBucket /* 漏桶算法 */
 func NewLeakyBucket(capacity, rate float64) *LeakyBucket {
 	return &LeakyBucket{
@@ -202,8 +192,8 @@ func Max(x, y float64) float64 {
 
 /* 漏桶算法 END */
 
-// AddInfo 添加信息，解析json
-func AddInfo(adminInfo []byte, userInfo []byte) {
+// AddUser 添加信息，解析json
+func AddUser(adminInfo []byte, userInfo []byte) {
 
 	AdminInfo = adminInfo
 	UsersInfo = userInfo

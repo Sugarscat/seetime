@@ -1,29 +1,34 @@
 package server
 
 import (
-	"net/http"
 	"seetime/server/account"
+
+	"github.com/gin-gonic/gin"
 )
 
 func openAPi() {
-	http.HandleFunc("/api/login", account.HandleLogin)
+	r := gin.Default()
 
-	http.HandleFunc("/api/me", account.HandleMe)
-	http.HandleFunc("/api/me/change", account.HandleMeChange)
+	r.Any("/ping", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
 
-	http.HandleFunc("/api/user", account.HandleUser)
-	http.HandleFunc("/api/user/manage", account.HandleUserManage)
-	err := http.ListenAndServe(":6060", nil)
-	if err != nil {
-		// ---日志
-		return
-	}
+	r.GET("/api/login", account.HandleLogin)
+
+	r.GET("/api/me", account.HandleMe)
+	r.PUT("/api/me", account.HandleMeUpdate)
+	r.GET("/api/me/info", account.HandleMeInfo)
+
+	r.GET("/api/users", account.HandleUsers)
+	r.Run(":6060")
 }
 
 func Loading() {
+	SendInfo()
 	defer openAPi()
+
 }
 
-func init() {
-	SendInfo()
-}
+func init() {}

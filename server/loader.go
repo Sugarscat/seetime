@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"io/ioutil"
 	"seetime/server/account"
 )
@@ -9,22 +8,20 @@ import (
 var (
 	adminInfo []byte // 读取json文件
 	usersInfo []byte
-	Err       error
+	err       error
 )
 
 func SendInfo() {
-	account.AddInfo(adminInfo, usersInfo)
+	account.AddUser(adminInfo, usersInfo)
 }
 
 func init() {
-	adminInfo, Err = ioutil.ReadFile("./data/Users/admin.json")
-	if Err != nil {
+	adminInfo, err = ioutil.ReadFile("./data/Users/admin.json")
+	if err != nil {
 		// ---日志
-		fmt.Println(1, Err)
 	}
-	usersInfo, Err = ioutil.ReadFile("./data/Users/Users.json")
-	if Err != nil {
+	usersInfo, err = ioutil.ReadFile("./data/Users/Users.json")
+	if err != nil {
 		// ---日志
-		fmt.Println(2, Err)
 	}
 }
