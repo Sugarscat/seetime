@@ -60,18 +60,21 @@ func UpdateMeInfo(id int, name string, password string) MeUpdateResponse {
 }
 
 func HandleMe(ctx *gin.Context) {
+	var code int
 	var response MeInfoResponse
 	token := ctx.Request.Header.Get("Authorization")
 
 	success, id := ChecKToken(token)
 
 	if success {
+		code = 200
 		response = AddMeInfoResponse(200, true, "认证成功", id, GetTime(Users[id].LastTime), Users[id].LastIp, Users[id].Permissions)
 	} else {
+		code = 403
 		response = AddMeInfoResponse(403, false, "身份令牌过期，请重新登录", -1, "null", "null", 0)
 	}
 
-	ctx.JSON(200, response)
+	ctx.JSON(code, response)
 }
 
 func HandleMeUpdate(ctx *gin.Context) {
