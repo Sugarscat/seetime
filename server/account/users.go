@@ -59,16 +59,6 @@ func AddUsersListResponse(code int, success bool, message string, userslist []Us
 	}
 }
 
-func AddUserResponse(code int, success bool, message string, request int, id int) UserResponse {
-	return UserResponse{
-		Code:      code,
-		Success:   success,
-		Message:   message,
-		RequestId: request,
-		UserId:    id,
-	}
-}
-
 func checkUserName(name string, id int) bool {
 	for _, user := range Users {
 		if name == user.Name && id != user.Id {
@@ -79,44 +69,47 @@ func checkUserName(name string, id int) bool {
 }
 
 func ReloadUsersInfo() {
-	for id, user := range Users {
-		user.Id = id
+	for id := range Users {
+		Users[id].Id = id
 	}
 }
 
 func HandleUsersDelete(ctx *gin.Context) {
-	var response UserResponse
+	var response UsersListResponse
 	id, _ := strconv.Atoi(ctx.Query("id"))
 	token := ctx.Request.Header.Get("Authorization")
 
 	success, requestId := ChecKToken(token)
 
 	if success {
-		if Users[requestId].Identity && id != 0 {
-			if id < len(Users) && id > -1 {
+		if Users[requestId].Identity {
+
+			if id < len(Users) && id > 0 {
 				Users = append(Users[:id], Users[id+1:]...)
 				ReloadUsersInfo()
 				if SaveInfo(-1) {
-					response = AddUserResponse(200, true, "删除成功", requestId, id)
+					response = AddUsersListResponse(200, true, "删除成功", addUsersList())
 				} else {
-					response = AddUserResponse(500, false, "删除失败，请重试", requestId, id)
+					response = AddUsersListResponse(500, false, "删除失败，请重试", addUsersList())
 				}
+			} else if id == 0 {
+				response = AddUsersListResponse(423, false, "不可删除根管理员", addUsersList())
 			} else {
-				response = AddUserResponse(404, false, "未找到该用户", requestId, id)
+				response = AddUsersListResponse(404, false, "未找到该用户", addUsersList())
 			}
 		} else {
-			response = AddUserResponse(403, false, "无权限", requestId, id)
+			response = AddUsersListResponse(400, false, "无权限", nil)
 		}
 
 	} else {
-		response = AddUserResponse(403, false, "身份令牌过期，请重新登录", requestId, id)
+		response = AddUsersListResponse(403, false, "身份令牌过期，请重新登录", nil)
 	}
 
 	ctx.JSON(200, response)
 }
 
 func HandleUsersUpdate(ctx *gin.Context) {
-	var response UserResponse
+	var response UsersListResponse
 	id, _ := strconv.Atoi(ctx.Query("id"))
 	token := ctx.Request.Header.Get("Authorization")
 	name := ctx.PostForm("name")
@@ -135,29 +128,29 @@ func HandleUsersUpdate(ctx *gin.Context) {
 					Users[id].Identity = identity
 					Users[id].Permissions = permissions
 					if SaveInfo(-1) {
-						response = AddUserResponse(200, true, "修改成功", requestId, id)
+						response = AddUsersListResponse(200, true, "修改成功", addUsersList())
 					} else {
-						response = AddUserResponse(500, false, "修改失败，请重试", requestId, id)
+						response = AddUsersListResponse(500, false, "修改失败，请重试", addUsersList())
 					}
 				} else {
-					response = AddUserResponse(409, false, "修改失败，重复用户名", requestId, id)
+					response = AddUsersListResponse(409, false, "修改失败，重复用户名", addUsersList())
 				}
 			} else {
-				response = AddUserResponse(404, false, "未找到该用户", requestId, id)
+				response = AddUsersListResponse(404, false, "未找到该用户", addUsersList())
 			}
 		} else {
-			response = AddUserResponse(403, false, "无权限", requestId, id)
+			response = AddUsersListResponse(400, false, "无权限", nil)
 		}
 
 	} else {
-		response = AddUserResponse(403, false, "身份令牌过期，请重新登录", requestId, id)
+		response = AddUsersListResponse(403, false, "身份令牌过期，请重新登录", nil)
 	}
 
 	ctx.JSON(200, response)
 }
 
 func HandleUsersAdd(ctx *gin.Context) {
-	var response UserResponse
+	var response UsersListResponse
 	token := ctx.Request.Header.Get("Authorization")
 	name := ctx.PostForm("name")
 	password := ctx.PostForm("pwd")
@@ -183,20 +176,20 @@ func HandleUsersAdd(ctx *gin.Context) {
 				}
 				Users = append(Users, user)
 				if SaveInfo(-1) {
-					response = AddUserResponse(200, true, "添加成功", id, len(Users)-1)
+					response = AddUsersListResponse(200, true, "添加成功", addUsersList())
 				} else {
-					response = AddUserResponse(500, false, "添加失败，请重试", id, -1)
+					response = AddUsersListResponse(500, false, "添加失败，请重试", addUsersList())
 				}
 			} else {
-				response = AddUserResponse(409, false, "添加失败，重复用户名", id, -1)
+				response = AddUsersListResponse(409, false, "添加失败，重复用户名", addUsersList())
 			}
 
 		} else {
-			response = AddUserResponse(403, false, "无权限", id, -1)
+			response = AddUsersListResponse(400, false, "无权限", nil)
 		}
 
 	} else {
-		response = AddUserResponse(403, false, "身份令牌过期，请重新登录", id, -1)
+		response = AddUsersListResponse(403, false, "身份令牌过期，请重新登录", nil)
 	}
 
 	ctx.JSON(200, response)

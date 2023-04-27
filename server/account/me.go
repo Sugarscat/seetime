@@ -52,7 +52,10 @@ func UpdateMeInfo(id int, name string, password string) MeUpdateResponse {
 		}
 	}
 	Users[id].Name = name
-	Users[id].Password = password
+	// 判断用户是否传入空密码，若不是则改变密码
+	if len(password) != 0 {
+		Users[id].Password = password
+	}
 	if !SaveInfo(id) {
 		return AddMeUpdateResponse(500, false, "修改失败，请重试")
 	}
