@@ -17,6 +17,7 @@ type JwtCustClaims struct {
 	jwt.RegisteredClaims
 }
 
+// ParseJWTToken 解析 Token,获得过期时间
 func ParseJWTToken(tokenString string) (int, bool) {
 	// Parse the token string
 	token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -37,6 +38,11 @@ func ParseJWTToken(tokenString string) (int, bool) {
 	return id, true
 }
 
+/*
+	Token 包含生成时间、过期时间、用户 id
+*/
+
+// GenerateToken 生成 Token
 func GenerateToken(id int, name string) string {
 	MyJwtCustClaims := JwtCustClaims{
 		id:   id,
@@ -56,6 +62,7 @@ func GenerateToken(id int, name string) string {
 	return token
 }
 
+// ChecKToken 检测 Token 是否过期
 func ChecKToken(token string) (bool, int) {
 	for _, user := range Users {
 		if user.Token == token {

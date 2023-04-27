@@ -43,7 +43,7 @@ func AddMeUpdateResponse(code int, success bool, message string) MeUpdateRespons
 }
 
 func UpdateMeInfo(id int, name string, password string) MeUpdateResponse {
-	if id == 0 && Users[id].Name != name {
+	if id == 0 && Users[id].Name != name { // 不可修改根管理用户名，防呆设计
 		return AddMeUpdateResponse(423, false, "不可修改根管理员用户名，如需修改请在服务器上修改文件")
 	}
 	for _, user := range Users {

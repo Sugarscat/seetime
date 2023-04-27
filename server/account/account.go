@@ -153,7 +153,7 @@ func GetTime(timestamp int64) string {
 	return datetime
 }
 
-// NewLeakyBucket /* 漏桶算法 */
+/* NewLeakyBucket 漏桶算法 限制请求次数 */
 func NewLeakyBucket(capacity, rate float64) *LeakyBucket {
 	return &LeakyBucket{
 		capacity:     capacity,

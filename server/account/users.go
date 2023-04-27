@@ -59,6 +59,7 @@ func AddUsersListResponse(code int, success bool, message string, userslist []Us
 	}
 }
 
+// checkUserName 检查是否有重复用户名
 func checkUserName(name string, id int) bool {
 	for _, user := range Users {
 		if name == user.Name && id != user.Id {
@@ -68,11 +69,16 @@ func checkUserName(name string, id int) bool {
 	return true
 }
 
+// ReloadUsersInfo 重载用户 id （用户 id 与切片下标有的很强依赖性）
 func ReloadUsersInfo() {
 	for id := range Users {
 		Users[id].Id = id
 	}
 }
+
+/*
+	在“用户管理“页面不可修改根管理员信息，防呆设计（避免用户修改信息导致无法登录）
+*/
 
 func HandleUsersDelete(ctx *gin.Context) {
 	var response UsersListResponse
@@ -83,16 +89,19 @@ func HandleUsersDelete(ctx *gin.Context) {
 
 	if success {
 		if Users[requestId].Identity {
-
 			if id < len(Users) && id > 0 {
-				Users = append(Users[:id], Users[id+1:]...)
-				ReloadUsersInfo()
-				if SaveInfo(-1) {
-					response = AddUsersListResponse(200, true, "删除成功", addUsersList())
+				if id == requestId { // 判断是否删除自己
+					response = AddUsersListResponse(400, false, "不可现登录用户", addUsersList())
 				} else {
-					response = AddUsersListResponse(500, false, "删除失败，请重试", addUsersList())
+					Users = append(Users[:id], Users[id+1:]...)
+					ReloadUsersInfo()
+					if SaveInfo(-1) {
+						response = AddUsersListResponse(200, true, "删除成功", addUsersList())
+					} else {
+						response = AddUsersListResponse(500, false, "删除失败，请重试", addUsersList())
+					}
 				}
-			} else if id == 0 {
+			} else if id == 0 { // 不可修改根管理员信息
 				response = AddUsersListResponse(423, false, "不可删除根管理员", addUsersList())
 			} else {
 				response = AddUsersListResponse(404, false, "未找到该用户", addUsersList())
@@ -121,20 +130,26 @@ func HandleUsersUpdate(ctx *gin.Context) {
 
 	if success {
 		if Users[requestId].Identity && id != 0 {
-			if id < len(Users) && id > -1 {
-				if checkUserName(name, id) {
-					Users[id].Name = name
-					Users[id].Password = password
-					Users[id].Identity = identity
-					Users[id].Permissions = permissions
-					if SaveInfo(-1) {
-						response = AddUsersListResponse(200, true, "修改成功", addUsersList())
-					} else {
-						response = AddUsersListResponse(500, false, "修改失败，请重试", addUsersList())
-					}
+			if id < len(Users) && id > 0 {
+				if id == requestId { // 判断是否修改自己的信息
+					response = AddUsersListResponse(400, false, "不可修改现登录用户信息", addUsersList())
 				} else {
-					response = AddUsersListResponse(409, false, "修改失败，重复用户名", addUsersList())
+					if checkUserName(name, id) {
+						Users[id].Name = name
+						Users[id].Password = password
+						Users[id].Identity = identity
+						Users[id].Permissions = permissions
+						if SaveInfo(-1) {
+							response = AddUsersListResponse(200, true, "修改成功", addUsersList())
+						} else {
+							response = AddUsersListResponse(500, false, "修改失败，请重试", addUsersList())
+						}
+					} else {
+						response = AddUsersListResponse(409, false, "修改失败，重复用户名", addUsersList())
+					}
 				}
+			} else if id == 0 { // 不可修改根管理员信息
+				response = AddUsersListResponse(423, false, "不可在此修改根管理员信息", addUsersList())
 			} else {
 				response = AddUsersListResponse(404, false, "未找到该用户", addUsersList())
 			}
@@ -195,6 +210,7 @@ func HandleUsersAdd(ctx *gin.Context) {
 	ctx.JSON(200, response)
 }
 
+// HandleUsers 获取用户列表
 func HandleUsers(ctx *gin.Context) {
 	var response UsersListResponse
 	token := ctx.Request.Header.Get("Authorization")
