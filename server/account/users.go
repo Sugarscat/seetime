@@ -60,7 +60,7 @@ func AddUsersListResponse(code int, success bool, message string, userslist []Us
 }
 
 // checkUserName 检查是否有重复用户名
-func checkUserName(name string, id int) bool {
+func checkUserName(id int, name string) bool {
 	for _, user := range Users {
 		if name == user.Name && id != user.Id {
 			return false
@@ -79,6 +79,27 @@ func ReloadUsersInfo() {
 /*
 	在“用户管理“页面不可修改根管理员信息，防呆设计（避免用户修改信息导致无法登录）
 */
+
+// UpdateUserInfo 更新用户信息
+func UpdateUserInfo(id int, name string, password string, identity bool, permissions int) UsersListResponse {
+	var response UsersListResponse
+	if checkUserName(id, name) {
+		Users[id].Name = name
+		if len(password) > 0 {
+			Users[id].Password = password
+		}
+		Users[id].Identity = identity
+		Users[id].Permissions = permissions
+		if SaveInfo(-1) {
+			response = AddUsersListResponse(200, true, "修改成功", addUsersList())
+		} else {
+			response = AddUsersListResponse(500, false, "修改失败，请重试", addUsersList())
+		}
+	} else {
+		response = AddUsersListResponse(409, false, "修改失败，重复用户名", addUsersList())
+	}
+	return response
+}
 
 func HandleUsersDelete(ctx *gin.Context) {
 	var response UsersListResponse
@@ -134,19 +155,7 @@ func HandleUsersUpdate(ctx *gin.Context) {
 				if id == requestId { // 判断是否修改自己的信息
 					response = AddUsersListResponse(400, false, "不可修改现登录用户信息", addUsersList())
 				} else {
-					if checkUserName(name, id) {
-						Users[id].Name = name
-						Users[id].Password = password
-						Users[id].Identity = identity
-						Users[id].Permissions = permissions
-						if SaveInfo(-1) {
-							response = AddUsersListResponse(200, true, "修改成功", addUsersList())
-						} else {
-							response = AddUsersListResponse(500, false, "修改失败，请重试", addUsersList())
-						}
-					} else {
-						response = AddUsersListResponse(409, false, "修改失败，重复用户名", addUsersList())
-					}
+					response = UpdateUserInfo(id, name, password, identity, permissions)
 				}
 			} else if id == 0 { // 不可修改根管理员信息
 				response = AddUsersListResponse(423, false, "不可在此修改根管理员信息", addUsersList())
@@ -156,7 +165,6 @@ func HandleUsersUpdate(ctx *gin.Context) {
 		} else {
 			response = AddUsersListResponse(400, false, "无权限", nil)
 		}
-
 	} else {
 		response = AddUsersListResponse(403, false, "身份令牌过期，请重新登录", nil)
 	}
@@ -176,7 +184,7 @@ func HandleUsersAdd(ctx *gin.Context) {
 
 	if success {
 		if Users[id].Identity {
-			if checkUserName(name, -51) {
+			if checkUserName(-1, name) {
 				user := User{
 					Id:          len(Users),
 					Name:        name,

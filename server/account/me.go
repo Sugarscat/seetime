@@ -4,15 +4,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// MeInfoResponse json 回复
-type MeInfoResponse struct {
-	Code        int    `json:"code"`        // 返回代码
-	Success     bool   `json:"success"`     // 验证成功
-	Message     string `json:"message"`     // 消息
-	Id          int    `json:"id"`          //id
+type MeInfoData struct {
+	Id          int    `json:"id"` // id
+	Identity    bool   `json:"identity"`
 	Time        string `json:"time"`        // 上次登录时间
 	IP          string `json:"ip"`          // 上次登录IP
 	Permissions int    `json:"permissions"` // 权限
+}
+
+// MeInfoResponse json 回复
+type MeInfoResponse struct {
+	Code    int        `json:"code"`    // 返回代码
+	Success bool       `json:"success"` // 验证成功
+	Message string     `json:"message"` // 消息
+	Data    MeInfoData `json:"data"`
 }
 
 type MeUpdateResponse struct {
@@ -22,15 +27,12 @@ type MeUpdateResponse struct {
 }
 
 // AddMeInfoResponse 添加回复
-func AddMeInfoResponse(code int, success bool, message string, id int, time string, ip string, permissions int) MeInfoResponse {
+func AddMeInfoResponse(code int, success bool, message string, data MeInfoData) MeInfoResponse {
 	return MeInfoResponse{
-		Code:        code,
-		Success:     success,
-		Message:     message,
-		Id:          id,
-		Time:        time,
-		IP:          ip,
-		Permissions: permissions,
+		Code:    code,
+		Success: success,
+		Message: message,
+		Data:    data,
 	}
 }
 
@@ -71,10 +73,22 @@ func HandleMe(ctx *gin.Context) {
 
 	if success {
 		code = 200
-		response = AddMeInfoResponse(200, true, "认证成功", id, GetTime(Users[id].LastTime), Users[id].LastIp, Users[id].Permissions)
+		response = AddMeInfoResponse(200, true, "认证成功", MeInfoData{
+			id,
+			Users[id].Identity,
+			GetTime(Users[id].LastTime),
+			Users[id].LastIp,
+			Users[id].Permissions,
+		})
 	} else {
 		code = 403
-		response = AddMeInfoResponse(403, false, "身份令牌过期，请重新登录", -1, "null", "null", 0)
+		response = AddMeInfoResponse(403, false, "身份令牌过期，请重新登录", MeInfoData{
+			-1,
+			false,
+			"---",
+			"---",
+			0,
+		})
 	}
 
 	ctx.JSON(code, response)
