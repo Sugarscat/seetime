@@ -6,31 +6,40 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func openAPi() {
-	r := gin.Default()
+func OpenRouter() {
+	router := gin.Default()
 
-	r.Any("/ping", func(ctx *gin.Context) {
+	router.Any("/ping", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"message": "pong",
 		})
 	})
 
-	r.GET("/api/login", account.HandleLogin)
+	// 在此处添加您的React应用程序路由处理程序
+	router.Static("/static", "./build/static")
+	router.NoRoute(func(c *gin.Context) {
+		c.File("./build/index.html")
+	})
 
-	r.GET("/api/me", account.HandleMe)
-	r.PUT("/api/me", account.HandleMeUpdate)
+	api := router.Group("/api")
+	{
+		api.GET("/login", account.HandleLogin)
 
-	r.GET("/api/users", account.HandleUsers)
-	r.POST("/api/users", account.HandleUsersAdd)
-	r.PUT("/api/users", account.HandleUsersUpdate)
-	r.DELETE("/api/users", account.HandleUsersDelete)
+		api.GET("/me", account.HandleMe)
+		api.PUT("/me", account.HandleMeUpdate)
 
-	r.Run(":6060")
+		api.GET("/users", account.HandleUsers)
+		api.POST("/users", account.HandleUsersAdd)
+		api.PUT("/users", account.HandleUsersUpdate)
+		api.DELETE("/users", account.HandleUsersDelete)
+	}
+
+	router.Run(":6060")
 }
 
 func Loading() {
 	SendInfo()
-	defer openAPi()
+	defer OpenRouter()
 
 }
 
