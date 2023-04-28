@@ -13,24 +13,16 @@ type UsersList struct {
 	Permissions int    `json:"permissions"`
 }
 
-type Data struct {
+type UsersListData struct {
 	Total   int         `json:"total"`
 	Content []UsersList `json:"content"`
 }
 
 type UsersListResponse struct {
-	Code    int    `json:"code"`    // 返回代码
-	Success bool   `json:"success"` // 验证成功
-	Message string `json:"message"` // 消息
-	Data    Data   `json:"data"`
-}
-
-type UserResponse struct {
-	Code      int    `json:"code"`    // 返回代码
-	Success   bool   `json:"success"` // 验证成功
-	Message   string `json:"message"` // 消息
-	RequestId int    `json:"request"` // 请求的id
-	UserId    int    `json:"id"`      // 添加/修改/删除的id
+	Code    int           `json:"code"`    // 返回代码
+	Success bool          `json:"success"` // 验证成功
+	Message string        `json:"message"` // 消息
+	Data    UsersListData `json:"data"`
 }
 
 func addUsersList() []UsersList {
@@ -52,7 +44,7 @@ func AddUsersListResponse(code int, success bool, message string, userslist []Us
 		Code:    code,
 		Success: success,
 		Message: message,
-		Data: Data{
+		Data: UsersListData{
 			Total:   len(userslist),
 			Content: userslist,
 		},
@@ -152,11 +144,7 @@ func HandleUsersUpdate(ctx *gin.Context) {
 	if success {
 		if Users[requestId].Identity && id != 0 {
 			if id < len(Users) && id > 0 {
-				if id == requestId { // 判断是否修改自己的信息
-					response = AddUsersListResponse(400, false, "不可修改现登录用户信息", addUsersList())
-				} else {
-					response = UpdateUserInfo(id, name, password, identity, permissions)
-				}
+				response = UpdateUserInfo(id, name, password, identity, permissions)
 			} else if id == 0 { // 不可修改根管理员信息
 				response = AddUsersListResponse(423, false, "不可在此修改根管理员信息", addUsersList())
 			} else {

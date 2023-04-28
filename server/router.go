@@ -28,6 +28,8 @@ func OpenRouter() {
 		api.GET("/me", account.HandleMe)
 		api.PUT("/me", account.HandleMeUpdate)
 
+		api.GET("/user", account.HandleUser)
+
 		api.GET("/users", account.HandleUsers)
 		api.POST("/users", account.HandleUsersAdd)
 		api.PUT("/users", account.HandleUsersUpdate)
