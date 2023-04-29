@@ -23,6 +23,8 @@ func OpenRouter() {
 
 	api := router.Group("/api")
 	{
+		api.GET("/time", HandleTime)
+
 		api.GET("/login", account.HandleLogin)
 
 		api.GET("/me", account.HandleMe)
