@@ -6,16 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type UsersList struct {
-	Id          int    `json:"id"`
-	Name        string `json:"name"`
-	Identity    bool   `json:"identity"`
-	Permissions int    `json:"permissions"`
-}
-
 type UsersListData struct {
-	Total   int         `json:"total"`
-	Content []UsersList `json:"content"`
+	Total   int        `json:"total"`
+	Content []UserData `json:"content"`
 }
 
 type UsersListResponse struct {
@@ -25,10 +18,10 @@ type UsersListResponse struct {
 	Data    UsersListData `json:"data"`
 }
 
-func addUsersList() []UsersList {
-	var usersList = make([]UsersList, 0, 1)
+func addUsersList() []UserData {
+	var usersList = make([]UserData, 0, 1)
 	for _, user := range Users {
-		userOne := UsersList{
+		userOne := UserData{
 			Id:          user.Id,
 			Name:        user.Name,
 			Identity:    user.Identity,
@@ -39,7 +32,7 @@ func addUsersList() []UsersList {
 	return usersList
 }
 
-func AddUsersListResponse(code int, success bool, message string, userslist []UsersList) UsersListResponse {
+func AddUsersListResponse(code int, success bool, message string, userslist []UserData) UsersListResponse {
 	return UsersListResponse{
 		Code:    code,
 		Success: success,
