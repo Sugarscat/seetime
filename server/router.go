@@ -2,6 +2,7 @@ package server
 
 import (
 	"seetime/server/account"
+	"seetime/server/tasks"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,6 +37,10 @@ func OpenRouter() {
 		api.POST("/users", account.HandleUsersAdd)
 		api.PUT("/users", account.HandleUsersUpdate)
 		api.DELETE("/users", account.HandleUsersDelete)
+
+		api.GET("/tasks", tasks.HandleTasks)
+
+		api.GET("/task", tasks.HandleTask)
 	}
 
 	router.Run(":6060")

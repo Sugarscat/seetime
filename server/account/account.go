@@ -191,8 +191,8 @@ func Max(x, y float64) float64 {
 
 /* 漏桶算法 END */
 
-// AddUser 添加信息，解析json
-func AddUser(adminInfo []byte, userInfo []byte) {
+// LoadUsers 添加信息，解析json
+func LoadUsers(adminInfo []byte, userInfo []byte) {
 
 	AdminInfo = adminInfo
 	UsersInfo = userInfo
@@ -225,14 +225,14 @@ func addUser() {
 		fmt.Println(err) // ---日志
 	}
 
-	for i := 0; i < len(userData.Users); i++ {
+	for _, userOne := range userData.Users {
 		user := User{
-			Id:          userData.Users[i].Id,
-			Name:        userData.Users[i].Name,
-			Password:    userData.Users[i].Password,
+			Id:          userOne.Id,
+			Name:        userOne.Name,
+			Password:    userOne.Password,
 			Token:       "null",
-			Identity:    userData.Users[i].Identity,
-			Permissions: userData.Users[i].Permissions,
+			Identity:    userOne.Identity,
+			Permissions: userOne.Permissions,
 		}
 		Users = append(Users, user)
 	}

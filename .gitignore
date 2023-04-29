@@ -19,3 +19,6 @@
 /data/users/users.json
 /data/tasks/tasks.json
 /data/tasks/templates.json
+
+/resources/tasks
+/resources/templates

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"seetime/server/account"
+	"seetime/server/tasks"
 )
 
 type adminFile struct {
@@ -17,8 +18,10 @@ type adminFile struct {
 var (
 	adminFilePlace = "./data/Users/admin.json"
 	usersFilePlace = "./data/Users/Users.json"
+	tasksFilePlace = "./data/tasks/tasks.json"
 	adminInfo      []byte // 读取json文件
 	usersInfo      []byte
+	tasksInfo      []byte
 	err            error
 )
 
@@ -45,7 +48,8 @@ func CreateAdminFile() {
 }
 
 func SendInfo() {
-	account.AddUser(adminInfo, usersInfo)
+	account.LoadUsers(adminInfo, usersInfo)
+	tasks.LoadTasks(tasksInfo)
 }
 
 func init() {
@@ -57,5 +61,6 @@ func init() {
 	defer func() {
 		adminInfo, _ = os.ReadFile(adminFilePlace)
 		usersInfo, _ = os.ReadFile(usersFilePlace)
+		tasksInfo, _ = os.ReadFile(tasksFilePlace)
 	}()
 }

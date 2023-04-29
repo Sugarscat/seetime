@@ -1,6 +1,8 @@
 package account
 
 import (
+	"seetime/server/module"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -76,7 +78,7 @@ func HandleMe(ctx *gin.Context) {
 		response = AddMeInfoResponse(200, true, "认证成功", MeInfoData{
 			id,
 			Users[id].Identity,
-			GetTime(Users[id].LastTime),
+			module.GetTime(Users[id].LastTime),
 			Users[id].LastIp,
 			Users[id].Permissions,
 		})

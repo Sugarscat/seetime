@@ -28,13 +28,13 @@ type UsersListResponse struct {
 func addUsersList() []UsersList {
 	var usersList = make([]UsersList, 0, 1)
 	for _, user := range Users {
-		aUser := UsersList{
+		userOne := UsersList{
 			Id:          user.Id,
 			Name:        user.Name,
 			Identity:    user.Identity,
 			Permissions: user.Permissions,
 		}
-		usersList = append(usersList, aUser)
+		usersList = append(usersList, userOne)
 	}
 	return usersList
 }
