@@ -35,14 +35,6 @@ type usersJson struct {
 	Users []usersCom `json:"users"`
 }
 
-type Permissions struct {
-	Situation    bool `json:"situation"`    // 系统信息
-	AddTask      bool `json:"addtask"`      // 添加任务
-	ChangeTask   bool `json:"changetask"`   // 修改任务
-	DeleteTask   bool `json:"deletetask"`   // 删除任务
-	DownloadTask bool `json:"downloadtask"` // 下载任务
-}
-
 type User struct {
 	Id          int
 	Name        string
@@ -68,32 +60,21 @@ type LeakyBucket struct {
 func SaveInfo(id int) bool {
 
 	if id == 0 {
-		fileAdmin, err := os.OpenFile("./data/users/admin.json", os.O_WRONLY|os.O_CREATE, 0644)
-		if err != nil {
-			fmt.Println(err) // ---日志
-			return false
-		}
+		fileAdmin, _ := os.OpenFile("./data/users/admin.json", os.O_WRONLY|os.O_CREATE, 0644)
 		defer func(fileAdmin *os.File) {
-			err := fileAdmin.Close()
-			if err != nil {
-				fmt.Println(err) // ---日志
-			}
+			fileAdmin.Close()
 		}(fileAdmin)
 
-		jsonDataA, err := json.Marshal(
+		jsonDataA, _ := json.Marshal(
 			adminJson{
 				Id:       0,
 				Name:     Users[0].Name,
 				Password: Users[0].Password,
 				Identity: true,
 			})
-		if err != nil {
-			fmt.Println(err) // ---日志
-			return false
-		}
 
 		fileAdmin.Truncate(0)
-		_, err = io.WriteString(fileAdmin, string(jsonDataA))
+		_, err := io.WriteString(fileAdmin, string(jsonDataA))
 		if err != nil {
 			fmt.Println(err) // ---日志
 			return false
@@ -102,16 +83,9 @@ func SaveInfo(id int) bool {
 		return true
 	}
 
-	fileUsers, err := os.OpenFile("./data/users/users.json", os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		fmt.Println(err) // ---日志
-		return false
-	}
+	fileUsers, _ := os.OpenFile("./data/users/users.json", os.O_WRONLY|os.O_CREATE, 0644)
 	defer func(fileUsers *os.File) {
-		err := fileUsers.Close()
-		if err != nil {
-			fmt.Println(err) // ---日志
-		}
+		fileUsers.Close()
 	}(fileUsers)
 
 	var usersJsonFile usersJson
@@ -128,14 +102,10 @@ func SaveInfo(id int) bool {
 			Permissions: user.Permissions})
 	}
 
-	jsonDataU, err := json.Marshal(usersJsonFile)
-	if err != nil {
-		fmt.Println(err) // ---日志
-		return false
-	}
+	jsonDataU, _ := json.Marshal(usersJsonFile)
 
 	fileUsers.Truncate(0)
-	_, err = io.WriteString(fileUsers, string(jsonDataU))
+	_, err := io.WriteString(fileUsers, string(jsonDataU))
 	if err != nil {
 		fmt.Println(err) // ---日志
 		return false

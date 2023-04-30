@@ -39,6 +39,8 @@ func OpenRouter() {
 		api.DELETE("/users", account.HandleUsersDelete)
 
 		api.GET("/tasks", tasks.HandleTasks)
+		api.POST("/tasks", tasks.HandleTasksAdd)
+		api.DELETE("/tasks", tasks.HandleTasksDelete)
 
 		api.GET("/task", tasks.HandleTask)
 	}

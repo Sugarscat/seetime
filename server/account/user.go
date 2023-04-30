@@ -20,6 +20,23 @@ type UserResponse struct {
 	Data    UserData `json:"data"`
 }
 
+func ParsingPermissions(id int, work string) bool {
+	switch work {
+	case "situation":
+		return Users[id].Permissions/10000 >= 1
+	case "addTask":
+		return Users[id].Permissions%10000/1000 >= 1
+	case "changeTask":
+		return Users[id].Permissions%10000%1000/100 >= 1
+	case "deleteTask":
+		return Users[id].Permissions%10000%1000%100/10 >= 1
+	case "downloadTask":
+		return Users[id].Permissions%10000%1000%100%10 >= 1
+	default:
+		return false
+	}
+}
+
 func AddUserResponse(code int, success bool, message string, id int) UserResponse {
 	var response UserResponse
 	if id == -1 {

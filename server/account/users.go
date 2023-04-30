@@ -68,6 +68,9 @@ func ReloadUsersInfo() {
 // UpdateUserInfo 更新用户信息
 func UpdateUserInfo(id int, name string, password string, identity bool, permissions int) UsersListResponse {
 	var response UsersListResponse
+	lastName := Users[id].Name
+	lsatIdentity := Users[id].Identity
+	lastPermissions := Users[id].Permissions
 	if checkUserName(id, name) {
 		Users[id].Name = name
 		if len(password) > 0 {
@@ -78,6 +81,10 @@ func UpdateUserInfo(id int, name string, password string, identity bool, permiss
 		if SaveInfo(-1) {
 			response = AddUsersListResponse(200, true, "修改成功", addUsersList())
 		} else {
+			// 若保存失败则回档
+			Users[id].Name = lastName
+			Users[id].Identity = lsatIdentity
+			Users[id].Permissions = lastPermissions
 			response = AddUsersListResponse(500, false, "修改失败，请重试", addUsersList())
 		}
 	} else {
@@ -99,11 +106,19 @@ func HandleUsersDelete(ctx *gin.Context) {
 				if id == requestId { // 判断是否删除自己
 					response = AddUsersListResponse(400, false, "不可现登录用户", addUsersList())
 				} else {
+					lastUser := Users[id]
 					Users = append(Users[:id], Users[id+1:]...)
-					ReloadUsersInfo()
 					if SaveInfo(-1) {
+						ReloadUsersInfo()
 						response = AddUsersListResponse(200, true, "删除成功", addUsersList())
 					} else {
+						// 若保存失败则回档
+						newSlice := make([]User, len(Users)+1)
+						copy(newSlice[:id], Users[:id])
+						newSlice[id] = lastUser
+						copy(newSlice[id+1:], Users[id:])
+						Users = newSlice
+						ReloadUsersInfo()
 						response = AddUsersListResponse(500, false, "删除失败，请重试", addUsersList())
 					}
 				}
@@ -182,6 +197,7 @@ func HandleUsersAdd(ctx *gin.Context) {
 				if SaveInfo(-1) {
 					response = AddUsersListResponse(200, true, "添加成功", addUsersList())
 				} else {
+					Users = append(Users[:user.Id], Users[user.Id+1:]...)
 					response = AddUsersListResponse(500, false, "添加失败，请重试", addUsersList())
 				}
 			} else {

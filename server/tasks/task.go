@@ -21,28 +21,21 @@ type TaskResponse struct {
 }
 
 // SaveTaskInfo 保存任务信息
-func SaveTaskInfo(task TaskData) {
-	file, err := os.OpenFile(Tasks[task.Id].Location+"config.json", os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Println(err) // ---日志
-	}
+func SaveTaskInfo(task TaskData) bool {
+	file, _ := os.OpenFile(Tasks[task.Id].Location+"config.json", os.O_WRONLY|os.O_CREATE, 0644)
 	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			fmt.Println(err) // ---日志
-		}
+		file.Close()
 	}(file)
 
-	json, err := json.Marshal(task)
-	if err != nil {
-		fmt.Println(err) // ---日志
-	}
+	json, _ := json.Marshal(task)
 
 	file.Truncate(0)
-	_, err = io.WriteString(file, string(json))
+	_, err := io.WriteString(file, string(json))
 	if err != nil {
 		fmt.Println(err) // ---日志
+		return false
 	}
+	return true
 }
 
 func ReadTaskInfo(id int) TaskData {
@@ -80,8 +73,8 @@ func AddTaskResponse(code int, success bool, message string, id int) TaskRespons
 		Message: message,
 		Data: TaskInfoData{
 			Id:      id,
-			Name:    Tasks[id].Name,
-			Info:    Tasks[id].Info,
+			Name:    TaskInfo.Name,
+			Info:    TaskInfo.Info,
 			Success: Tasks[id].Success,
 			Cycle:   TaskInfo.Cycle,
 			Lastime: module.GetTime(TaskInfo.Lastime),
@@ -99,7 +92,11 @@ func HandleTask(ctx *gin.Context) {
 
 	if success {
 		if account.Users[requestId].Identity {
-			response = AddTaskResponse(200, true, "加载成功", id)
+			if id < len(Tasks) && id > -1 {
+				response = AddTaskResponse(200, true, "查询成功", id)
+			} else {
+				response = AddTaskResponse(404, false, "无此任务", -1)
+			}
 		} else {
 			response = AddTaskResponse(400, false, "无权限", -1)
 		}

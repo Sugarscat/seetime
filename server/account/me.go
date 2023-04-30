@@ -47,6 +47,8 @@ func AddMeUpdateResponse(code int, success bool, message string) MeUpdateRespons
 }
 
 func UpdateMeInfo(id int, name string, password string) MeUpdateResponse {
+	lastName := Users[id].Name
+	lastPassword := Users[id].Password
 	if id == 0 && Users[id].Name != name { // 不可修改根管理用户名，防呆设计
 		return AddMeUpdateResponse(423, false, "不可修改根管理员用户名，如需修改请在服务器上修改文件")
 	}
@@ -61,6 +63,9 @@ func UpdateMeInfo(id int, name string, password string) MeUpdateResponse {
 		Users[id].Password = password
 	}
 	if !SaveInfo(id) {
+		// 若保存失败则回档
+		Users[id].Name = lastName
+		Users[id].Password = lastPassword
 		return AddMeUpdateResponse(500, false, "修改失败，请重试")
 	}
 	return AddMeUpdateResponse(200, true, "修改成功")
