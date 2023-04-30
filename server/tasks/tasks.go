@@ -144,7 +144,6 @@ func HandleTasksAdd(ctx *gin.Context) {
 			}
 
 			err := os.MkdirAll(task.Location, 0755)
-			fmt.Println(task.Location)
 			if err != nil {
 				response = AddTasksResponse(500, false, "添加失败，请重试", addTasksList())
 				ctx.JSON(200, response)
