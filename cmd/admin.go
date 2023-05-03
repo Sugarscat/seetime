@@ -19,12 +19,13 @@ type adminFile struct {
 	Identity bool   `json:"identity"`
 }
 
-func getPwd() {
+func GetPwd() {
 	var admin adminFile
 	err = json.Unmarshal(adminInfo, &admin)
 	if err != nil {
 		fmt.Println(err) // ---日志
 	}
+	fmt.Println(admin.Name)
 	fmt.Println(admin.Password)
 }
 

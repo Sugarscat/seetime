@@ -14,9 +14,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type TasksListInfo struct {
+	Id      int    `json:"id"`
+	Name    string `json:"name"`
+	Info    string `json:"info"`
+	Success bool   `json:"success"`
+	Diy     bool   `json:"diy"`
+	Lastime string `json:"lastime"`
+}
+
 type TasksList struct {
-	Total   int            `json:"total"`
-	Content []TaskInfoData `json:"content"`
+	Total   int             `json:"total"`
+	Content []TasksListInfo `json:"content"`
 }
 
 type TasksResponse struct {
@@ -55,25 +64,24 @@ func SaveTask() bool {
 	return true
 }
 
-func addTasksList() []TaskInfoData {
-	var tasksList = make([]TaskInfoData, 0, 1)
+func addTasksList() []TasksListInfo {
+	var tasksList = make([]TasksListInfo, 0, 1)
 	for _, task := range Tasks {
 		TaskInfo := ReadTaskInfo(task.Id)
-		taskOne := TaskInfoData{
+		taskOne := TasksListInfo{
 			Id:      task.Id,
 			Name:    TaskInfo.Name,
 			Info:    TaskInfo.Info,
 			Success: task.Success,
-			Cycle:   TaskInfo.Cycle,
+			Diy:     TaskInfo.Diy,
 			Lastime: module.GetTime(TaskInfo.Lastime),
-			Command: TaskInfo.Command,
 		}
 		tasksList = append(tasksList, taskOne)
 	}
 	return tasksList
 }
 
-func AddTasksResponse(code int, success bool, message string, tasksList []TaskInfoData) TasksResponse {
+func AddTasksResponse(code int, success bool, message string, tasksList []TasksListInfo) TasksResponse {
 	return TasksResponse{
 		Code:    code,
 		Success: success,
@@ -137,8 +145,10 @@ func HandleTasksAdd(ctx *gin.Context) {
 				Id:      len(Tasks),
 				Name:    name,
 				Info:    info,
+				Diy:     true,
 				Cycle:   cycle,
 				Command: command,
+				File:    file.Filename,
 				Lastime: 0,
 				Logtime: 0,
 			}

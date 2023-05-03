@@ -1,9 +1,9 @@
 package main
 
 import (
-	"seetime/server"
+	"seetime/cmd"
 )
 
 func main() {
-	server.Loading()
+	cmd.Run()
 }

@@ -48,10 +48,4 @@ func OpenRouter() {
 	router.Run(":6060")
 }
 
-func Loading() {
-	SendInfo()
-	defer OpenRouter()
-
-}
-
 func init() {}

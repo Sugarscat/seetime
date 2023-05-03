@@ -52,6 +52,12 @@ func SendInfo() {
 	tasks.LoadTasks(tasksInfo)
 }
 
+func Loading() {
+	SendInfo()
+	defer OpenRouter()
+
+}
+
 func init() {
 	adminInfo, err = os.ReadFile(adminFilePlace)
 	if err != nil {

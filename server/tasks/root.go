@@ -36,21 +36,12 @@ type TaskData struct {
 	Id      int    `json:"id"`
 	Name    string `json:"name"`
 	Info    string `json:"info"`
+	Diy     bool   `json:"diy"`
 	Cycle   string `json:"cycle"`
 	Command string `json:"command"`
+	File    string `json:"file"`
 	Lastime int64  `json:"lastime"`
 	Logtime int64  `json:"logtime"`
-}
-
-// 回复信息
-type TaskInfoData struct {
-	Id      int    `json:"id"`
-	Name    string `json:"name"`
-	Info    string `json:"info"`
-	Success bool   `json:"success"`
-	Cycle   string `json:"cycle"`
-	Lastime string `json:"lastime"`
-	Command string `json:"command"`
 }
 
 func LoadTasks(tasksInfo []byte) {
@@ -95,8 +86,8 @@ func AddCron(task Task) {
 		return
 	}
 
-	cron := cron.New()
 	TaskInfo := ReadTaskInfo(task.Id)
+	cron := cron.New()
 
 	cron.AddFunc(TaskInfo.Cycle, func() {
 		if !Tasks[task.Id].Success {

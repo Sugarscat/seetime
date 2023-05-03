@@ -1,5 +1,7 @@
 package cmd
 
-func start() {
+import "seetime/server"
 
+func Start() {
+	server.Loading()
 }
