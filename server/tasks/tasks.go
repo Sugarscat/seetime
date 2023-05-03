@@ -6,10 +6,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"seetime/server/account"
-	"seetime/server/module"
 	"strconv"
 	"time"
+
+	"github.com/sugarscat/seetime/server/account"
+	"github.com/sugarscat/seetime/server/module"
 
 	"github.com/gin-gonic/gin"
 )

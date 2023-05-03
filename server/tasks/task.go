@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"time"
 
-	"seetime/server/account"
-	"seetime/server/module"
+	"github.com/sugarscat/seetime/server/account"
+	"github.com/sugarscat/seetime/server/module"
 
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron"

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"seetime/cmd"
+	"github.com/sugarscat/seetime/cmd"
 )
 
 func main() {

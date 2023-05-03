@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"seetime/server/account"
-	"seetime/server/tasks"
+
+	"github.com/sugarscat/seetime/server/account"
+	"github.com/sugarscat/seetime/server/tasks"
 )
 
 type adminFile struct {

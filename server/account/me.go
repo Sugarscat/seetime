@@ -1,7 +1,7 @@
 package account
 
 import (
-	"seetime/server/module"
+	"github.com/sugarscat/seetime/server/module"
 
 	"github.com/gin-gonic/gin"
 )
