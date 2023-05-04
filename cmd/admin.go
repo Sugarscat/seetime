@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -19,14 +21,14 @@ type adminFile struct {
 	Identity bool   `json:"identity"`
 }
 
-func GetPwd() {
+func getPwd() {
 	var admin adminFile
 	err = json.Unmarshal(adminInfo, &admin)
 	if err != nil {
 		fmt.Println(err) // ---日志
 	}
-	fmt.Println(admin.Name)
-	fmt.Println(admin.Password)
+	fmt.Println("Name:", admin.Name)
+	fmt.Println("Password:", admin.Password)
 }
 
 func createAdminFile() {
@@ -51,7 +53,17 @@ func createAdminFile() {
 	defer file.Close()
 }
 
+var PasswordCmd = &cobra.Command{
+	Use:     "admin",
+	Aliases: []string{"password"},
+	Short:   "Show admin user's info",
+	Run: func(cmd *cobra.Command, args []string) {
+		getPwd()
+	},
+}
+
 func init() {
+	RootCmd.AddCommand(PasswordCmd)
 	adminInfo, err = os.ReadFile(adminFilePlace)
 	if err != nil {
 		createAdminFile()
