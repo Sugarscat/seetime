@@ -71,6 +71,8 @@ func ChecKToken(token string) (bool, int) {
 				return true, id
 			}
 
+		} else {
+			continue
 		}
 	}
 

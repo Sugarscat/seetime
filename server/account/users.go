@@ -108,8 +108,8 @@ func HandleUsersDelete(ctx *gin.Context) {
 				} else {
 					lastUser := Users[id]
 					Users = append(Users[:id], Users[id+1:]...)
+					ReloadUsersInfo()
 					if SaveInfo(-1) {
-						ReloadUsersInfo()
 						response = AddUsersListResponse(200, true, "删除成功", addUsersList())
 					} else {
 						// 若保存失败则回档

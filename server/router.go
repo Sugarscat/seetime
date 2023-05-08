@@ -24,7 +24,7 @@ func OpenRouter() {
 
 	api := router.Group("/api")
 	{
-		api.GET("/time", HandleTime)
+		api.GET("/system", HandleSystem)
 
 		api.GET("/login", account.HandleLogin)
 
@@ -41,8 +41,12 @@ func OpenRouter() {
 		api.GET("/tasks", tasks.HandleTasks)
 		api.POST("/tasks", tasks.HandleTasksAdd)
 		api.DELETE("/tasks", tasks.HandleTasksDelete)
+		api.GET("/tasks/count", tasks.HandleTasksCount)
 
 		api.GET("/task", tasks.HandleTask)
+		api.PUT("/task", tasks.HandleTaskUpdate)
+		api.GET("/task/run", tasks.HandleTaskRunOne)
+		api.GET("/task/log", tasks.HandleTaskLog)
 	}
 
 	router.Run(":6060")

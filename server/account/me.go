@@ -92,8 +92,8 @@ func HandleMe(ctx *gin.Context) {
 		response = AddMeInfoResponse(403, false, "身份令牌过期，请重新登录", MeInfoData{
 			-1,
 			false,
-			"---",
-			"---",
+			"",
+			"",
 			0,
 		})
 	}

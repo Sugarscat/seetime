@@ -3,10 +3,10 @@ package tasks
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"io"
 	"os"
-	"os/exec"
 	"runtime"
+	"strconv"
 	"time"
 
 	"github.com/robfig/cron"
@@ -32,8 +32,11 @@ type tasksJson struct {
 	Tasks []Task `json:"tasks"`
 }
 
+type tasksNumJson struct {
+	Count []tasksCount `json:"count"`
+}
+
 type TaskData struct {
-	Id      int    `json:"id"`
 	Name    string `json:"name"`
 	Info    string `json:"info"`
 	Diy     bool   `json:"diy"`
@@ -41,24 +44,23 @@ type TaskData struct {
 	Command string `json:"command"`
 	File    string `json:"file"`
 	Lastime int64  `json:"lastime"`
-	Logtime int64  `json:"logtime"`
+}
+
+type tasksCount struct {
+	Date    string `json:"date"`
+	Total   int    `json:"total"`
+	Success int    `json:"success"`
+	Fail    int    `json:"fail"`
 }
 
 func LoadTasks(tasksInfo []byte) {
-
 	TasksInfo = tasksInfo
-
 	defer addTasks()
 }
 
 func addTasks() {
-	err := json.Unmarshal(TasksInfo, &tasksData)
-	if err != nil {
-		fmt.Println(err) // ---日志
-	}
-
-	Tasks = tasksData.Tasks
-
+	json.Unmarshal(TasksInfo, &tasksData)
+	Tasks = append(Tasks, tasksData.Tasks...)
 	defer PlanningTasks()
 }
 
@@ -75,59 +77,79 @@ func PlanningTasks() {
 	}
 
 	for _, task := range Tasks {
-		AddCron(task)
+		AddCron(task.Id)
 	}
-
 }
 
-func AddCron(task Task) {
+func AddCron(id int) {
 	// 如任务上次未执行成功则跳过加载定时器
-	if !task.Success {
+	if !Tasks[id].Success {
 		return
 	}
 
-	TaskInfo := ReadTaskInfo(task.Id)
+	TaskInfo := ReadTaskInfo(id)
 	cron := cron.New()
 
 	cron.AddFunc(TaskInfo.Cycle, func() {
-		if !Tasks[task.Id].Success {
-			return // 发现上次未执行成功，跳过执行任务
-		}
-		var fileLog *os.File
-		// 只保存两天的日志
-		timeLog := time.Now().Unix() - TaskInfo.Logtime
-		if timeLog >= 172800 || timeLog == 0 {
-			TaskInfo.Logtime = time.Now().Unix()
-			fileLog, _ = os.OpenFile(task.Location+"log.log", os.O_WRONLY|os.O_CREATE, 0644)
-			fileLog.Truncate(0)
-		} else {
-			fileLog, _ = os.OpenFile(task.Location+"log.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-		}
-		// 记录日志
-		defer func(fileLog *os.File) {
-			fileLog.Close()
-		}(fileLog)
-
-		// 设置格式
-		log.SetOutput(fileLog)
-		log.SetFlags(log.Ldate | log.Ltime)
-		// 任务开始
-		run := "cd " + task.Location + " && " + TaskInfo.Command
-		cmd := exec.Command(runStart, runCode, run)
-		output, err := cmd.Output()
-		log.Println(string(output))
-		if err != nil {
-			log.Println(err)
-			Tasks[task.Id].Success = false
-		}
-		TaskInfo.Lastime = time.Now().Unix()
-		SaveTaskInfo(TaskInfo)
+		RunTask(id)
 	})
 	cron.Start()
 	Crons = append(Crons, *cron)
 }
 
 func DeleteCron(id int) {
-	Crons[id].Stop()                            // 停止定时器
+	Crons[id].Stop()
 	Crons = append(Crons[:id], Crons[id+1:]...) // 删除定时器
+}
+
+// init 系统定时器
+func init() {
+	cron := cron.New()
+	cron.AddFunc("0 0 23 * * ?", func() { // 每天 23:00 执行，记录任务执行情况
+		var (
+			success   int
+			failed    int
+			JsonFile  tasksNumJson
+			countData tasksNumJson
+		)
+
+		file, _ := os.OpenFile("./data/tasks/count.json", os.O_WRONLY|os.O_CREATE, 0644)
+		defer file.Close()
+
+		countInfo, _ := os.ReadFile("./data/tasks/count.json")
+		json.Unmarshal(countInfo, &countData)
+
+		for _, task := range Tasks {
+			if task.Success {
+				success++
+			} else {
+				failed++
+			}
+		}
+
+		JsonFile.Count = make([]tasksCount, 0, 1)
+		_, month, day := time.Now().Date()
+
+		if len(countData.Count) > 7 {
+			JsonFile.Count = append(JsonFile.Count, countData.Count[len(countData.Count)-7:]...)
+		} else {
+			JsonFile.Count = append(JsonFile.Count, countData.Count...)
+		}
+
+		JsonFile.Count = append(JsonFile.Count, tasksCount{
+			Date:    strconv.Itoa(int(month)) + "/" + strconv.Itoa(day),
+			Total:   len(Tasks),
+			Success: success,
+			Fail:    failed,
+		})
+
+		jsonData, _ := json.Marshal(JsonFile)
+
+		file.Truncate(0)
+		_, err := io.WriteString(file, string(jsonData))
+		if err != nil {
+			fmt.Println(err) // ---日志
+		}
+	})
+	cron.Start()
 }

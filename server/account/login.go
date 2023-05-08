@@ -19,7 +19,7 @@ var refused = LoginResponse{
 	Success: false,
 	Message: "请求次数过多",
 	Id:      -1,
-	Token:   "null",
+	Token:   "",
 }
 
 var bucket = NewLeakyBucket(6, 0.1) // 桶
@@ -60,7 +60,7 @@ func checkInfo(name string, password string, ctx *gin.Context) LoginResponse {
 		}
 	}
 
-	response = AddLoginResponse(404, false, "用户名或密码错误", -1, "null")
+	response = AddLoginResponse(404, false, "用户名或密码错误", -1, "")
 	return response
 }
 
@@ -74,6 +74,4 @@ func HandleLogin(ctx *gin.Context) {
 	ctx.JSON(200, response)
 }
 
-func init() {
-
-}
+func init() {}

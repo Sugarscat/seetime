@@ -61,9 +61,7 @@ func SaveInfo(id int) bool {
 
 	if id == 0 {
 		fileAdmin, _ := os.OpenFile("./data/users/admin.json", os.O_WRONLY|os.O_CREATE, 0644)
-		defer func(fileAdmin *os.File) {
-			fileAdmin.Close()
-		}(fileAdmin)
+		defer fileAdmin.Close()
 
 		jsonDataA, _ := json.Marshal(
 			adminJson{
@@ -84,9 +82,7 @@ func SaveInfo(id int) bool {
 	}
 
 	fileUsers, _ := os.OpenFile("./data/users/users.json", os.O_WRONLY|os.O_CREATE, 0644)
-	defer func(fileUsers *os.File) {
-		fileUsers.Close()
-	}(fileUsers)
+	defer fileUsers.Close()
 
 	var usersJsonFile usersJson
 	usersJsonFile.Users = make([]usersCom, 0, 1)
@@ -152,6 +148,24 @@ func Max(x, y float64) float64 {
 
 /* 漏桶算法 END */
 
+// ParsingPermissions 分析用户权限
+func ParsingPermissions(id int, work string) bool {
+	switch work {
+	case "situation":
+		return Users[id].Permissions/10000 >= 1
+	case "addTask":
+		return Users[id].Permissions%10000/1000 >= 1
+	case "changeTask":
+		return Users[id].Permissions%10000%1000/100 >= 1
+	case "deleteTask":
+		return Users[id].Permissions%10000%1000%100/10 >= 1
+	case "downloadTask":
+		return Users[id].Permissions%10000%1000%100%10 >= 1
+	default:
+		return false
+	}
+}
+
 // LoadUsers 添加信息，解析json
 func LoadUsers(adminInfo []byte, userInfo []byte) {
 
@@ -163,35 +177,26 @@ func LoadUsers(adminInfo []byte, userInfo []byte) {
 }
 
 func addAdmin() {
-	err := json.Unmarshal(AdminInfo, &adminData)
-	if err != nil {
-		fmt.Println(err) // ---日志
-	}
-
+	json.Unmarshal(AdminInfo, &adminData)
 	admin := User{
 		Id:          adminData.Id,
 		Name:        adminData.Name,
 		Password:    adminData.Password,
-		Token:       "null",
+		Token:       "",
 		Identity:    adminData.Identity,
 		Permissions: 11111,
 	}
-
 	Users = append(Users, admin)
 }
 
 func addUser() {
-	err := json.Unmarshal(UsersInfo, &userData)
-	if err != nil {
-		fmt.Println(err) // ---日志
-	}
-
+	json.Unmarshal(UsersInfo, &userData)
 	for _, userOne := range userData.Users {
 		user := User{
 			Id:          userOne.Id,
 			Name:        userOne.Name,
 			Password:    userOne.Password,
-			Token:       "null",
+			Token:       "",
 			Identity:    userOne.Identity,
 			Permissions: userOne.Permissions,
 		}
@@ -199,6 +204,4 @@ func addUser() {
 	}
 }
 
-func init() {
-
-}
+func init() {}

@@ -17,8 +17,8 @@
 /.vscode/
 /build/
 /data/users/users.json
-/data/tasks/tasks.json
-/data/tasks/templates.json
+/data/tasks/
+/data/tasks/
 
 /resources/tasks
 /resources/templates
