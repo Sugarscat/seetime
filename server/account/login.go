@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sugarscat/seetime/server/module"
 )
 
 type LoginResponse struct {
@@ -22,7 +23,7 @@ var refused = LoginResponse{
 	Token:   "",
 }
 
-var bucket = NewLeakyBucket(6, 0.1) // 桶
+var bucket = module.NewLeakyBucket(6, 0.1) // 桶
 
 func AddLoginResponse(code int, success bool, message string, id int, token string) LoginResponse {
 	return LoginResponse{

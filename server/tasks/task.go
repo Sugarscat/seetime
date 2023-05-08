@@ -55,9 +55,11 @@ func SaveTaskInfo(id int, task TaskData) bool {
 
 func RunTask(id int) {
 	go func() {
-		defer func() {
+		TaskInfo := ReadTaskInfo(id)
+
+		defer func() { // 捕获异常，避免任务执行错误，导致整个系统挂掉
 			if err := recover(); err != nil {
-				fmt.Println(id, "任务执行错误")
+				fmt.Println(TaskInfo.Name, "任务执行错误")
 			}
 		}()
 
@@ -65,7 +67,6 @@ func RunTask(id int) {
 			return // 发现上次未执行成功，跳过执行任务
 		}
 
-		TaskInfo := ReadTaskInfo(id)
 		// 任务开始
 		run := "cd " + Tasks[id].Location + " && " + TaskInfo.Command
 		cmd := exec.Command(runStart, runCode, run)
@@ -155,13 +156,14 @@ func UpdateCron(id int, task TaskData, file *multipart.FileHeader, change bool, 
 		go func() {
 			defer func() {
 				if err := recover(); err != nil {
-					fmt.Println("任务执行错误")
+					fmt.Println(taskInfo.Name, "任务执行错误")
 				}
 			}()
 
 			if !Tasks[id].Success {
 				return // 发现上次未执行成功，跳过执行任务
 			}
+
 			// 任务开始
 			run := "cd " + Tasks[id].Location + " && " + taskInfo.Command
 			cmd := exec.Command(runStart, runCode, run)
