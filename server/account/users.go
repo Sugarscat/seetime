@@ -128,7 +128,7 @@ func HandleUsersDelete(ctx *gin.Context) {
 				response = AddUsersListResponse(404, false, "未找到该用户", addUsersList())
 			}
 		} else {
-			response = AddUsersListResponse(400, false, "无权限", nil)
+			response = AddUsersListResponse(400, false, "没有权限", nil)
 		}
 
 	} else {
@@ -159,7 +159,7 @@ func HandleUsersUpdate(ctx *gin.Context) {
 				response = AddUsersListResponse(404, false, "未找到该用户", addUsersList())
 			}
 		} else {
-			response = AddUsersListResponse(400, false, "无权限", nil)
+			response = AddUsersListResponse(400, false, "没有权限", nil)
 		}
 	} else {
 		response = AddUsersListResponse(403, false, "身份令牌过期，请重新登录", nil)
@@ -205,7 +205,7 @@ func HandleUsersAdd(ctx *gin.Context) {
 			}
 
 		} else {
-			response = AddUsersListResponse(400, false, "无权限", nil)
+			response = AddUsersListResponse(400, false, "没有权限", nil)
 		}
 
 	} else {
@@ -226,7 +226,7 @@ func HandleUsers(ctx *gin.Context) {
 		if Users[requestId].Identity {
 			response = AddUsersListResponse(200, true, "加载成功", addUsersList())
 		} else {
-			response = AddUsersListResponse(400, false, "无权限", nil)
+			response = AddUsersListResponse(400, false, "没有权限", nil)
 		}
 
 	} else {

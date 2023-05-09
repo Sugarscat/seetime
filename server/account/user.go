@@ -65,7 +65,7 @@ func HandleUser(ctx *gin.Context) {
 				response = AddUserResponse(404, false, "无此用户", -1)
 			}
 		} else {
-			response = AddUserResponse(400, false, "无权限", -1)
+			response = AddUserResponse(400, false, "没有权限", -1)
 		}
 	} else {
 		response = AddUserResponse(403, false, "身份令牌过期，请重新登录", -1)

@@ -108,7 +108,7 @@ func ParsingPermissions(id int, work string) bool {
 		return Users[id].Permissions/10000 >= 1
 	case "addTask":
 		return Users[id].Permissions%10000/1000 >= 1
-	case "changeTask":
+	case "updateTask":
 		return Users[id].Permissions%10000%1000/100 >= 1
 	case "deleteTask":
 		return Users[id].Permissions%10000%1000%100/10 >= 1

@@ -23,9 +23,9 @@ type TaskInfoData struct {
 	Id      int    `json:"id"`
 	Name    string `json:"name"`
 	Info    string `json:"info"`
-	Success bool   `json:"success"`
 	Diy     bool   `json:"diy"`
 	Run     bool   `json:"run"`
+	Success bool   `json:"success"`
 	Cycle   string `json:"cycle"`
 	Command string `json:"command"`
 	Lastime string `json:"lastime"`
@@ -56,28 +56,27 @@ func SaveTaskInfo(id int, task TaskData) bool {
 }
 
 // RunTask 运行任务
-func RunTask(id int) {
-	go func() {
-		TaskInfo := ReadTaskInfo(id)
+func RunTask(id int) bool {
+	TaskInfo := ReadTaskInfo(id)
 
-		defer func() { // 捕获异常，避免任务执行错误，导致整个系统挂掉
-			if err := recover(); err != nil {
-				fmt.Println(TaskInfo.Name, "任务执行错误")
-			}
-		}()
-
-		// 任务开始
-		run := "cd " + Tasks[id].Location + " && " + TaskInfo.Command
-		cmd := exec.Command(runStart, runCode, run)
-		err := cmd.Start()
-		if err != nil {
-			Tasks[id].Success = false
-		} else {
-			Tasks[id].Success = true
+	defer func() { // 捕获异常，避免任务执行错误，导致整个系统挂掉
+		if err := recover(); err != nil {
+			fmt.Println(TaskInfo.Name, "任务执行错误")
 		}
-		TaskInfo.Lastime = time.Now().Unix()
-		SaveTaskInfo(id, TaskInfo)
 	}()
+
+	// 任务开始
+	run := "cd " + Tasks[id].Location + " && " + TaskInfo.Command
+	cmd := exec.Command(runStart, runCode, run)
+	err := cmd.Start()
+	if err != nil {
+		TaskInfo.Success = false
+	} else {
+		TaskInfo.Success = true
+	}
+	TaskInfo.Lastime = time.Now().Unix()
+	SaveTaskInfo(id, TaskInfo)
+	return TaskInfo.Success
 }
 
 // ReadTaskInfo 读取任务信息
@@ -134,9 +133,9 @@ func AddTaskResponse(code int, success bool, message string, id int) TaskRespons
 			Id:      id,
 			Name:    TaskInfo.Name,
 			Info:    TaskInfo.Info,
-			Success: Tasks[id].Success,
 			Diy:     TaskInfo.Diy,
 			Run:     TaskInfo.Run,
+			Success: TaskInfo.Success,
 			Cycle:   TaskInfo.Cycle,
 			Command: TaskInfo.Command,
 			Lastime: module.GetTime(TaskInfo.Lastime),
@@ -178,9 +177,9 @@ func UpdateCron(id int, task TaskData, file *multipart.FileHeader, change bool, 
 			cmd := exec.Command(runStart, runCode, run)
 			err := cmd.Start()
 			if err != nil {
-				Tasks[id].Success = false
+				taskInfo.Success = false
 			} else {
-				Tasks[id].Success = true
+				taskInfo.Success = true
 			}
 			taskInfo.Lastime = time.Now().Unix()
 			SaveTaskInfo(id, taskInfo)
@@ -207,7 +206,7 @@ func HandleTask(ctx *gin.Context) {
 				response = AddTaskResponse(404, false, "无此任务", -1)
 			}
 		} else {
-			response = AddTaskResponse(400, false, "无权限", -1)
+			response = AddTaskResponse(400, false, "没有权限", -1)
 		}
 	} else {
 		response = AddTaskResponse(403, false, "身份令牌过期，请重新登录", -1)
@@ -245,7 +244,7 @@ func HandleTaskUpdate(ctx *gin.Context) {
 	success, requestId := account.ChecKToken(token)
 
 	if success {
-		if account.ParsingPermissions(requestId, "changeTask") {
+		if account.ParsingPermissions(requestId, "updateTask") {
 			if id < len(Tasks) && id > -1 {
 				task := TaskData{
 					Name:    name,
@@ -260,37 +259,7 @@ func HandleTaskUpdate(ctx *gin.Context) {
 				response = AddTaskResponse(404, false, "无此任务", -1)
 			}
 		} else {
-			response = AddTaskResponse(400, false, "无权限", -1)
-		}
-	} else {
-		response = AddTaskResponse(403, false, "身份令牌过期，请重新登录", -1)
-	}
-
-	ctx.JSON(200, response)
-}
-
-func HandleTaskRunOne(ctx *gin.Context) {
-	var response TaskResponse
-	token := ctx.Request.Header.Get("Authorization")
-	id, _ := strconv.Atoi(ctx.Query("id"))
-
-	success, requestId := account.ChecKToken(token)
-
-	if success {
-		// 拥有添加任务或修改任务权限的任意一个
-		if account.ParsingPermissions(requestId, "addTask") || account.ParsingPermissions(requestId, "changeTask") {
-			if id < len(Tasks) && id > -1 {
-				RunTask(id)
-				if Tasks[id].Success {
-					response = AddTaskResponse(200, true, "执行成功", id)
-				} else {
-					response = AddTaskResponse(500, false, "执行失败", id)
-				}
-			} else {
-				response = AddTaskResponse(404, false, "无此任务", -1)
-			}
-		} else {
-			response = AddTaskResponse(400, false, "无权限", -1)
+			response = AddTaskResponse(400, false, "没有权限", -1)
 		}
 	} else {
 		response = AddTaskResponse(403, false, "身份令牌过期，请重新登录", -1)
@@ -337,7 +306,7 @@ func HandleTaskLog(ctx *gin.Context) {
 			response = gin.H{
 				"code":    400,
 				"success": false,
-				"message": "无权限",
+				"message": "没有权限",
 				"data":    "null",
 			}
 		}

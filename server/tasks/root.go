@@ -28,7 +28,6 @@ var (
 // 任务位置
 type Task struct {
 	Id       int    `json:"id"`
-	Success  bool   `json:"success"`
 	Location string `json:"location"`
 }
 
@@ -48,6 +47,7 @@ type TaskData struct {
 	Info    string `json:"info"`
 	Diy     bool   `json:"diy"`
 	Run     bool   `json:"run"`
+	Success bool   `json:"success"`
 	Cycle   string `json:"cycle"`
 	Command string `json:"command"`
 	File    string `json:"file"`
@@ -95,16 +95,13 @@ func PlanningTasks() {
 
 // AddCron 添加定时器
 func AddCron(id int) {
-	// 如任务上次未执行成功则跳过加载定时器
-	if !Tasks[id].Success {
-		return
-	}
 	TaskInfo := ReadTaskInfo(id)
 	cron := cron.New()
 	cron.AddFunc(TaskInfo.Cycle, func() {
 		RunTask(id)
 	})
-	if TaskInfo.Run {
+	// 只有可执行或上次执行成功的任务才开启定时器
+	if TaskInfo.Run && TaskInfo.Success {
 		cron.Start()
 	}
 	Crons = append(Crons, *cron)
@@ -133,7 +130,8 @@ func init() {
 		json.Unmarshal(countInfo, &countData)
 
 		for _, task := range Tasks {
-			if task.Success {
+			taskInfo := ReadTaskInfo(task.Id)
+			if taskInfo.Success {
 				success++
 			} else {
 				failed++

@@ -44,10 +44,10 @@ func OpenRouter() {
 		api.GET("/tasks/count", tasks.HandleTasksCount)
 		api.GET("/tasks/stop", tasks.HandleTaskStop)
 		api.GET("/tasks/activate", tasks.HandleTaskActivate)
+		api.GET("/tasks/run", tasks.HandleTasksRunOne)
 
 		api.GET("/task", tasks.HandleTask)
 		api.PUT("/task", tasks.HandleTaskUpdate)
-		api.GET("/task/run", tasks.HandleTaskRunOne)
 		api.GET("/task/log", tasks.HandleTaskLog)
 	}
 

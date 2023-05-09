@@ -33,7 +33,7 @@ func HandleSystem(ctx *gin.Context) {
 			ctx.JSON(200, gin.H{
 				"code":    400,
 				"success": false,
-				"message": "无权限",
+				"message": "没有权限",
 				"data":    nil,
 			})
 		}
