@@ -17,8 +17,8 @@ type adminFile struct {
 }
 
 var (
-	adminFilePlace = "./data/Users/admin.json"
-	usersFilePlace = "./data/Users/Users.json"
+	adminFilePlace = "./data/users/"
+	usersFilePlace = "./data/users/users.json"
 	tasksFilePlace = "./data/tasks/tasks.json"
 	adminInfo      []byte // 读取json文件
 	usersInfo      []byte
@@ -33,7 +33,9 @@ func CreateAdminFile() {
 		Password: "QWQTime",
 		Identity: true,
 	}
-	file, err := os.Create(adminFilePlace)
+
+	os.MkdirAll(adminFilePlace, 0755)
+	file, err := os.Create(adminFilePlace + "admin.json")
 	if err != nil {
 		fmt.Println(err) // ---日志
 	}
@@ -66,8 +68,11 @@ func init() {
 	}
 
 	defer func() {
-		adminInfo, _ = os.ReadFile(adminFilePlace)
+		adminInfo, _ = os.ReadFile(adminFilePlace + "admin.json")
 		usersInfo, _ = os.ReadFile(usersFilePlace)
-		tasksInfo, _ = os.ReadFile(tasksFilePlace)
+		tasksInfo, err = os.ReadFile(tasksFilePlace)
+		if err != nil {
+			os.MkdirAll("./data/tasks/", 0755)
+		}
 	}()
 }

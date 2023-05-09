@@ -136,7 +136,7 @@ func addAdmin() {
 		Name:        adminData.Name,
 		Password:    adminData.Password,
 		Token:       "",
-		Identity:    adminData.Identity,
+		Identity:    true,
 		Permissions: 11111,
 	}
 	Users = append(Users, admin)

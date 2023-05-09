@@ -11,7 +11,7 @@ import (
 var (
 	err            error
 	adminInfo      []byte
-	adminFilePlace = "./data/Users/admin.json"
+	adminFilePlace = "./data/Users/"
 )
 
 type adminFile struct {
@@ -38,7 +38,9 @@ func createAdminFile() {
 		Password: "QWQTime",
 		Identity: true,
 	}
-	file, err := os.Create(adminFilePlace)
+
+	os.MkdirAll(adminFilePlace, 0755)
+	file, err := os.Create(adminFilePlace + "admin.json")
 	if err != nil {
 		fmt.Println(err) // ---日志
 	}
