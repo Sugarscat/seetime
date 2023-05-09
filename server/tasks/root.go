@@ -25,6 +25,7 @@ var (
 	Crons     = make([]cron.Cron, 0, 1)
 )
 
+// 任务位置
 type Task struct {
 	Id       int    `json:"id"`
 	Success  bool   `json:"success"`
@@ -36,20 +37,24 @@ type tasksJson struct {
 	Tasks []Task `json:"tasks"`
 }
 
+// 任务统计的 json 文件
 type tasksNumJson struct {
 	Count []tasksCount `json:"count"`
 }
 
+// 任务数据（可用于解析 json 文件）
 type TaskData struct {
 	Name    string `json:"name"`
 	Info    string `json:"info"`
 	Diy     bool   `json:"diy"`
+	Run     bool   `json:"run"`
 	Cycle   string `json:"cycle"`
 	Command string `json:"command"`
 	File    string `json:"file"`
 	Lastime int64  `json:"lastime"`
 }
 
+// 任务统计
 type tasksCount struct {
 	Date    string `json:"date"`
 	Total   int    `json:"total"`
@@ -57,17 +62,20 @@ type tasksCount struct {
 	Fail    int    `json:"fail"`
 }
 
+// LoadTasks 接收任务信息
 func LoadTasks(tasksInfo []byte) {
 	TasksInfo = tasksInfo
 	defer addTasks()
 }
 
+// addTasks 解析任务，添加任务
 func addTasks() {
 	json.Unmarshal(TasksInfo, &tasksData)
 	Tasks = append(Tasks, tasksData.Tasks...)
 	defer PlanningTasks()
 }
 
+// PlanningTasks 计划任务
 func PlanningTasks() {
 	if runtime.GOOS == "windows" { // Windows
 		runStart = "cmd"
@@ -85,19 +93,20 @@ func PlanningTasks() {
 	}
 }
 
+// AddCron 添加定时器
 func AddCron(id int) {
 	// 如任务上次未执行成功则跳过加载定时器
 	if !Tasks[id].Success {
 		return
 	}
-
 	TaskInfo := ReadTaskInfo(id)
 	cron := cron.New()
-
 	cron.AddFunc(TaskInfo.Cycle, func() {
 		RunTask(id)
 	})
-	cron.Start()
+	if TaskInfo.Run {
+		cron.Start()
+	}
 	Crons = append(Crons, *cron)
 }
 

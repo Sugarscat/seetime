@@ -42,6 +42,8 @@ func OpenRouter() {
 		api.POST("/tasks", tasks.HandleTasksAdd)
 		api.DELETE("/tasks", tasks.HandleTasksDelete)
 		api.GET("/tasks/count", tasks.HandleTasksCount)
+		api.GET("/tasks/stop", tasks.HandleTaskStop)
+		api.GET("/tasks/activate", tasks.HandleTaskActivate)
 
 		api.GET("/task", tasks.HandleTask)
 		api.PUT("/task", tasks.HandleTaskUpdate)

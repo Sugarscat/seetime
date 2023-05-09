@@ -15,18 +15,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type TasksListInfo struct {
+// 任务列表中单个任务的信息
+type TaskOneInfo struct {
 	Id      int    `json:"id"`
 	Name    string `json:"name"`
 	Info    string `json:"info"`
 	Success bool   `json:"success"`
 	Diy     bool   `json:"diy"`
+	Run     bool   `json:"run"`
 	Lastime string `json:"lastime"`
 }
 
 type TasksList struct {
-	Total   int             `json:"total"`
-	Content []TasksListInfo `json:"content"`
+	Total   int           `json:"total"`
+	Content []TaskOneInfo `json:"content"`
 }
 
 type TasksResponse struct {
@@ -63,16 +65,17 @@ func SaveTasks() bool {
 	return true
 }
 
-func addTasksList() []TasksListInfo {
-	var tasksList = make([]TasksListInfo, 0, 1)
+func addTasksList() []TaskOneInfo {
+	var tasksList = make([]TaskOneInfo, 0, 1)
 	for _, task := range Tasks {
 		TaskInfo := ReadTaskInfo(task.Id)
-		taskOne := TasksListInfo{
+		taskOne := TaskOneInfo{
 			Id:      task.Id,
 			Name:    TaskInfo.Name,
 			Info:    TaskInfo.Info,
 			Success: task.Success,
 			Diy:     TaskInfo.Diy,
+			Run:     TaskInfo.Run,
 			Lastime: module.GetTime(TaskInfo.Lastime),
 		}
 		tasksList = append(tasksList, taskOne)
@@ -80,7 +83,7 @@ func addTasksList() []TasksListInfo {
 	return tasksList
 }
 
-func AddTasksResponse(code int, success bool, message string, tasksList []TasksListInfo) TasksResponse {
+func AddTasksResponse(code int, success bool, message string, tasksList []TaskOneInfo) TasksResponse {
 	return TasksResponse{
 		Code:    code,
 		Success: success,
@@ -98,6 +101,57 @@ func ReloadTasksInfo() {
 	}
 }
 
+func anyPermissions(requestId int) bool {
+	if account.ParsingPermissions(requestId, "addTask") {
+		return true
+	}
+	if account.ParsingPermissions(requestId, "changeTask") {
+		return true
+	}
+	if account.ParsingPermissions(requestId, "deleteTask") {
+		return true
+	}
+	if account.ParsingPermissions(requestId, "changeTask") {
+		return true
+	}
+	return false
+}
+
+func HandleTasksCount(ctx *gin.Context) {
+	var count tasksNumJson
+	token := ctx.Request.Header.Get("Authorization")
+	success, id := account.ChecKToken(token)
+
+	if success {
+		if account.ParsingPermissions(id, "situation") {
+			countInfo, _ := os.ReadFile("./data/tasks/count.json")
+			json.Unmarshal(countInfo, &count)
+			ctx.JSON(200, gin.H{
+				"code":    200,
+				"success": true,
+				"message": "加载成功",
+				"data":    count.Count,
+			})
+		} else {
+			ctx.JSON(200, gin.H{
+				"code":    400,
+				"success": false,
+				"message": "无权限",
+				"data":    nil,
+			})
+		}
+		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"code":    403,
+		"success": false,
+		"message": "身份令牌过期，请重新登录",
+		"data":    nil,
+	})
+}
+
+// HandleTasks 回复任务列表
 func HandleTasks(ctx *gin.Context) {
 	var response TasksResponse
 	token := ctx.Request.Header.Get("Authorization")
@@ -105,7 +159,7 @@ func HandleTasks(ctx *gin.Context) {
 	success, requestId := account.ChecKToken(token)
 
 	if success {
-		if account.Users[requestId].Identity {
+		if anyPermissions(requestId) {
 			response = AddTasksResponse(200, true, "加载成功", addTasksList())
 		} else {
 			response = AddTasksResponse(400, false, "无权限", nil)
@@ -249,36 +303,68 @@ func HandleTasksDelete(ctx *gin.Context) {
 	ctx.JSON(200, response)
 }
 
-func HandleTasksCount(ctx *gin.Context) {
-	var count tasksNumJson
-	token := ctx.Request.Header.Get("Authorization")
-	success, id := account.ChecKToken(token)
+func HandleTaskStop(ctx *gin.Context) {
 
-	if success {
-		if account.ParsingPermissions(id, "situation") {
-			countInfo, _ := os.ReadFile("./data/tasks/count.json")
-			json.Unmarshal(countInfo, &count)
-			ctx.JSON(200, gin.H{
-				"code":    200,
-				"success": true,
-				"message": "加载成功",
-				"data":    count.Count,
-			})
-		} else {
-			ctx.JSON(200, gin.H{
-				"code":    400,
-				"success": false,
-				"message": "无权限",
-				"data":    nil,
-			})
-		}
+	if !bucket.AddWater(1) {
+		ctx.JSON(200, gin.H{
+			"code":    429,
+			"success": false,
+			"message": "请求次数过多",
+			"data":    "null",
+		})
 		return
 	}
 
-	ctx.JSON(200, gin.H{
-		"code":    403,
-		"success": false,
-		"message": "身份令牌过期，请重新登录",
-		"data":    nil,
-	})
+	var response TasksResponse
+	id, _ := strconv.Atoi(ctx.Query("id"))
+	token := ctx.Request.Header.Get("Authorization")
+	success, requestId := account.ChecKToken(token)
+	if success {
+		if anyPermissions(requestId) {
+			if id < len(Tasks) && id > -1 {
+				StopTask(id)
+				response = AddTasksResponse(200, true, "已停止任务", addTasksList())
+			} else {
+				response = AddTasksResponse(404, false, "无此任务", addTasksList())
+			}
+		} else {
+			response = AddTasksResponse(400, false, "无权限", nil)
+		}
+	} else {
+		response = AddTasksResponse(403, false, "身份令牌过期，请重新登录", nil)
+	}
+	ctx.JSON(200, response)
+}
+
+func HandleTaskActivate(ctx *gin.Context) {
+
+	if !bucket.AddWater(1) {
+		ctx.JSON(200, gin.H{
+			"code":    429,
+			"success": false,
+			"message": "请求次数过多",
+			"data":    "null",
+		})
+		return
+	}
+
+	var response TasksResponse
+	id, _ := strconv.Atoi(ctx.Query("id"))
+	token := ctx.Request.Header.Get("Authorization")
+	success, requestId := account.ChecKToken(token)
+	if success {
+		if anyPermissions(requestId) {
+			if id < len(Tasks) && id > -1 {
+				ActivateTask(id)
+				response = AddTasksResponse(200, true, "已开启任务", addTasksList())
+			} else {
+				response = AddTasksResponse(404, false, "无此任务", addTasksList())
+			}
+		} else {
+			response = AddTasksResponse(400, false, "无权限", nil)
+		}
+	} else {
+		response = AddTasksResponse(403, false, "身份令牌过期，请重新登录", nil)
+	}
+	ctx.JSON(200, response)
 }

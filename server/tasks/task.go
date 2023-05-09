@@ -18,16 +18,17 @@ import (
 	"github.com/robfig/cron"
 )
 
+// 任务的本地数据
 type TaskInfoData struct {
 	Id      int    `json:"id"`
 	Name    string `json:"name"`
 	Info    string `json:"info"`
 	Success bool   `json:"success"`
 	Diy     bool   `json:"diy"`
+	Run     bool   `json:"run"`
 	Cycle   string `json:"cycle"`
 	Command string `json:"command"`
 	Lastime string `json:"lastime"`
-	Nextime int64  `json:"nextime"`
 }
 
 // 回复信息
@@ -54,6 +55,7 @@ func SaveTaskInfo(id int, task TaskData) bool {
 	return true
 }
 
+// RunTask 运行任务
 func RunTask(id int) {
 	go func() {
 		TaskInfo := ReadTaskInfo(id)
@@ -80,6 +82,7 @@ func RunTask(id int) {
 	}()
 }
 
+// ReadTaskInfo 读取任务信息
 func ReadTaskInfo(id int) TaskData {
 	var TaskInfo TaskData
 	// 读取任务配置
@@ -88,6 +91,7 @@ func ReadTaskInfo(id int) TaskData {
 	return TaskInfo
 }
 
+// ReadTaskLog 读取任务日志
 func ReadTaskLog(id int) (data string, success bool) {
 	log, err := os.ReadFile(Tasks[id].Location + "log.log")
 	if err != nil {
@@ -97,6 +101,21 @@ func ReadTaskLog(id int) (data string, success bool) {
 	}
 }
 
+// StopTask 停止任务
+func StopTask(id int) {
+	Crons[id].Stop()
+	task := ReadTaskInfo(id)
+	task.Run = false
+	SaveTaskInfo(id, task)
+}
+
+func ActivateTask(id int) {
+	task := ReadTaskInfo(id)
+	task.Run = true
+	SaveTaskInfo(id, task)
+	Crons[id].Start()
+}
+
 func AddTaskResponse(code int, success bool, message string, id int) TaskResponse {
 	if id == -1 {
 		return TaskResponse{
@@ -104,14 +123,7 @@ func AddTaskResponse(code int, success bool, message string, id int) TaskRespons
 			Success: success,
 			Message: message,
 			Data: TaskInfoData{
-				Id:      id,
-				Name:    "",
-				Info:    "",
-				Success: false,
-				Diy:     false,
-				Cycle:   "",
-				Command: "",
-				Lastime: "",
+				Id: id,
 			},
 		}
 	}
@@ -126,6 +138,7 @@ func AddTaskResponse(code int, success bool, message string, id int) TaskRespons
 			Info:    TaskInfo.Info,
 			Success: Tasks[id].Success,
 			Diy:     TaskInfo.Diy,
+			Run:     TaskInfo.Run,
 			Cycle:   TaskInfo.Cycle,
 			Command: TaskInfo.Command,
 			Lastime: module.GetTime(TaskInfo.Lastime),
@@ -133,6 +146,7 @@ func AddTaskResponse(code int, success bool, message string, id int) TaskRespons
 	}
 }
 
+// UpdateCron 更新定时器信息
 func UpdateCron(id int, task TaskData, file *multipart.FileHeader, change bool, ctx *gin.Context) {
 	Crons[id].Stop() // 停止定时器
 
@@ -176,7 +190,9 @@ func UpdateCron(id int, task TaskData, file *multipart.FileHeader, change bool, 
 			SaveTaskInfo(id, taskInfo)
 		}()
 	})
-	cron.Start()
+	if taskInfo.Run {
+		cron.Start()
+	}
 	Crons[id] = *cron // 更新定时器信息
 }
 
@@ -310,7 +326,7 @@ func HandleTaskLog(ctx *gin.Context) {
 						"code":    404,
 						"success": false,
 						"message": "没有日志",
-						"data":    "null",
+						"data":    "没有日志",
 					}
 				}
 			} else {
