@@ -66,16 +66,14 @@ func RunTask(id int) {
 			}
 		}()
 
-		if !Tasks[id].Success {
-			return // 发现上次未执行成功，跳过执行任务
-		}
-
 		// 任务开始
 		run := "cd " + Tasks[id].Location + " && " + TaskInfo.Command
 		cmd := exec.Command(runStart, runCode, run)
 		err := cmd.Start()
 		if err != nil {
 			Tasks[id].Success = false
+		} else {
+			Tasks[id].Success = true
 		}
 		TaskInfo.Lastime = time.Now().Unix()
 		SaveTaskInfo(id, TaskInfo)
@@ -175,16 +173,14 @@ func UpdateCron(id int, task TaskData, file *multipart.FileHeader, change bool, 
 				}
 			}()
 
-			if !Tasks[id].Success {
-				return // 发现上次未执行成功，跳过执行任务
-			}
-
 			// 任务开始
 			run := "cd " + Tasks[id].Location + " && " + taskInfo.Command
 			cmd := exec.Command(runStart, runCode, run)
 			err := cmd.Start()
 			if err != nil {
 				Tasks[id].Success = false
+			} else {
+				Tasks[id].Success = true
 			}
 			taskInfo.Lastime = time.Now().Unix()
 			SaveTaskInfo(id, taskInfo)
