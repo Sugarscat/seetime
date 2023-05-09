@@ -13,8 +13,8 @@ import (
 	"github.com/sugarscat/seetime/server/module"
 )
 
-// 每 5 秒可请求一次 api, (为什么限制？因为本项目的所属者很菜，不限制会导致系统运行异常)
-var bucket = module.NewLeakyBucket(1, 0.2) // 桶
+// 每 2 秒可请求一次 api, (为什么限制？因为本项目的所属者很菜，不限制会导致系统运行异常)
+var bucket = module.NewLeakyBucket(1, 0.5) // 桶
 
 var (
 	TasksInfo []byte
