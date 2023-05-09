@@ -204,7 +204,7 @@ func HandleTasksAdd(ctx *gin.Context) {
 		if account.ParsingPermissions(requestId, "addTask") {
 			task := Task{
 				Id:       len(Tasks),
-				Location: "./resources/tasks/" + strconv.FormatInt(time.Now().UnixNano(), 10) + "/",
+				Location: "./resources/tasks/" + strconv.FormatInt(time.Now().Unix(), 10) + "/",
 			}
 			taskData := TaskData{
 				Name:    name,
