@@ -119,6 +119,17 @@ func HandleTasks(ctx *gin.Context) {
 }
 
 func HandleTasksAdd(ctx *gin.Context) {
+
+	if !bucket.AddWater(1) {
+		ctx.JSON(200, gin.H{
+			"code":    429,
+			"success": false,
+			"message": "请求次数过多",
+			"data":    "null",
+		})
+		return
+	}
+
 	var response TasksResponse
 	token := ctx.Request.Header.Get("Authorization")
 	name := ctx.PostForm("name")
@@ -185,33 +196,50 @@ func HandleTasksAdd(ctx *gin.Context) {
 }
 
 func HandleTasksDelete(ctx *gin.Context) {
+
+	if !bucket.AddWater(1) {
+		ctx.JSON(200, gin.H{
+			"code":    429,
+			"success": false,
+			"message": "请求次数过多",
+			"data":    "null",
+		})
+		return
+	}
+
 	var response TasksResponse
 	id, _ := strconv.Atoi(ctx.Query("id"))
 	token := ctx.Request.Header.Get("Authorization")
 	success, requestId := account.ChecKToken(token)
 	if success {
 		if account.ParsingPermissions(requestId, "deleteTask") {
-			lastTask := Tasks[id]
-			Tasks = append(Tasks[:id], Tasks[id+1:]...)
-			ReloadTasksInfo()
-			if SaveTasks() {
-				os.RemoveAll(lastTask.Location)
-				response = AddTasksResponse(200, true, "删除成功", addTasksList())
-			} else {
-				// 若保存失败则回档
-				newSlice := make([]Task, len(Tasks)+1)
-				copy(newSlice[:id], Tasks[:id])
-				newSlice[id] = lastTask
-				copy(newSlice[id+1:], Tasks[id:])
-				Tasks = newSlice
+			if id < len(Tasks) && id > -1 {
+				lastTask := Tasks[id]
+				Tasks = append(Tasks[:id], Tasks[id+1:]...)
 				ReloadTasksInfo()
-				response = AddTasksResponse(500, false, "删除失败，请重试", addTasksList())
+				if SaveTasks() {
+					// 停止所有定时器
+					for _, cron := range Crons {
+						cron.Stop()
+					}
+					os.RemoveAll(lastTask.Location)
+					response = AddTasksResponse(200, true, "删除成功", addTasksList())
+					// 重载所有定时器
+					Crons = Crons[:0]
+					PlanningTasks()
+				} else {
+					// 若保存失败则回档
+					newSlice := make([]Task, len(Tasks)+1)
+					copy(newSlice[:id], Tasks[:id])
+					newSlice[id] = lastTask
+					copy(newSlice[id+1:], Tasks[id:])
+					Tasks = newSlice
+					ReloadTasksInfo()
+					response = AddTasksResponse(500, false, "删除失败，请重试", addTasksList())
+				}
+			} else {
+				response = AddTasksResponse(404, false, "无此任务", addTasksList())
 			}
-			for _, cron := range Crons {
-				cron.Stop()
-			}
-			Crons = Crons[:0]
-			PlanningTasks()
 		} else {
 			response = AddTasksResponse(400, false, "无权限", nil)
 		}

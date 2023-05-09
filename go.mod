@@ -8,6 +8,8 @@ require (
 	github.com/robfig/cron v1.2.0
 )
 
+require github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75 // indirect
+
 require (
 	github.com/bytedance/sonic v1.8.8 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect

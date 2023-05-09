@@ -25,8 +25,9 @@ type TaskInfoData struct {
 	Success bool   `json:"success"`
 	Diy     bool   `json:"diy"`
 	Cycle   string `json:"cycle"`
-	Lastime string `json:"lastime"`
 	Command string `json:"command"`
+	Lastime string `json:"lastime"`
+	Nextime int64  `json:"nextime"`
 }
 
 // 回复信息
@@ -109,8 +110,8 @@ func AddTaskResponse(code int, success bool, message string, id int) TaskRespons
 				Success: false,
 				Diy:     false,
 				Cycle:   "",
-				Lastime: "",
 				Command: "",
+				Lastime: "",
 			},
 		}
 	}
@@ -126,8 +127,8 @@ func AddTaskResponse(code int, success bool, message string, id int) TaskRespons
 			Success: Tasks[id].Success,
 			Diy:     TaskInfo.Diy,
 			Cycle:   TaskInfo.Cycle,
-			Lastime: module.GetTime(TaskInfo.Lastime),
 			Command: TaskInfo.Command,
+			Lastime: module.GetTime(TaskInfo.Lastime),
 		},
 	}
 }
@@ -204,6 +205,17 @@ func HandleTask(ctx *gin.Context) {
 }
 
 func HandleTaskUpdate(ctx *gin.Context) {
+
+	if !bucket.AddWater(1) {
+		ctx.JSON(200, gin.H{
+			"code":    429,
+			"success": false,
+			"message": "请求次数过多",
+			"data":    "null",
+		})
+		return
+	}
+
 	var response TaskResponse
 	var change bool
 	token := ctx.Request.Header.Get("Authorization")

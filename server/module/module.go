@@ -1,6 +1,11 @@
 package module
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/gorhill/cronexpr"
+)
 
 // LeakyBucket 漏桶算法的桶定义
 type LeakyBucket struct {
@@ -19,7 +24,7 @@ func GetTime(timestamp int64) string {
 	return datetime
 }
 
-/* NewLeakyBucket 漏桶算法 限制请求次数 */
+/* NewLeakyBucket 漏桶算法 限制 api 请求次数 */
 func NewLeakyBucket(capacity, rate float64) *LeakyBucket {
 	return &LeakyBucket{
 		capacity:     capacity,
@@ -55,4 +60,13 @@ func Max(x, y float64) float64 {
 	return y
 }
 
-/* 漏桶算法 END */
+// ParsingCrontab 解析定时器的表达式，得到下次执行时间
+func ParsingCrontab(last int64, cron string) int64 {
+	defer func() { // 捕获异常，避免任务执行错误，导致整个系统挂掉
+		if err := recover(); err != nil {
+			fmt.Println("无法解析 Cron")
+		}
+	}()
+	expr := cronexpr.MustParse(cron)
+	return expr.Next(time.Unix(last, 0)).Unix()
+}
