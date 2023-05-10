@@ -47,8 +47,8 @@ func SaveTasks() bool {
 	taskJsonFile.Tasks = make([]Task, 0, 1)
 	for _, task := range Tasks {
 		taskJsonFile.Tasks = append(taskJsonFile.Tasks, Task{
-			Id:       task.Id,
-			Location: task.Location,
+			Id:   task.Id,
+			Path: task.Path,
 		})
 	}
 
@@ -203,8 +203,8 @@ func HandleTasksAdd(ctx *gin.Context) {
 	if success {
 		if account.ParsingPermissions(requestId, "addTask") {
 			task := Task{
-				Id:       len(Tasks),
-				Location: "./resources/tasks/" + strconv.FormatInt(time.Now().Unix(), 10) + "/",
+				Id:   len(Tasks),
+				Path: "./resources/tasks/" + strconv.FormatInt(time.Now().Unix(), 10) + "/",
 			}
 			taskData := TaskData{
 				Name:    name,
@@ -218,7 +218,7 @@ func HandleTasksAdd(ctx *gin.Context) {
 				Lastime: 0,
 			}
 
-			err := os.MkdirAll(task.Location, 0755)
+			err := os.MkdirAll(task.Path, 0755)
 			if err != nil {
 				response = AddTasksResponse(500, false, "添加失败，请重试", addTasksList())
 				ctx.JSON(200, response)
@@ -226,7 +226,7 @@ func HandleTasksAdd(ctx *gin.Context) {
 			}
 
 			// 将文件保存到服务器
-			filepath := filepath.Join(task.Location, file.Filename)
+			filepath := filepath.Join(task.Path, file.Filename)
 			ctx.SaveUploadedFile(file, filepath)
 
 			Tasks = append(Tasks, task) // 添加任务
@@ -237,7 +237,7 @@ func HandleTasksAdd(ctx *gin.Context) {
 			} else {
 				// 添加失败后删除上传的信息
 				Tasks = append(Tasks[:task.Id], Tasks[task.Id+1:]...)
-				os.RemoveAll(task.Location)
+				os.RemoveAll(task.Path)
 				response = AddTasksResponse(500, false, "添加失败，请重试", addTasksList())
 			}
 
@@ -279,7 +279,7 @@ func HandleTasksDelete(ctx *gin.Context) {
 					for _, cron := range Crons {
 						cron.Stop()
 					}
-					os.RemoveAll(lastTask.Location)
+					os.RemoveAll(lastTask.Path)
 					response = AddTasksResponse(200, true, "删除成功", addTasksList())
 					// 重载所有定时器
 					Crons = Crons[:0]

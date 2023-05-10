@@ -27,8 +27,8 @@ var (
 
 // 任务位置
 type Task struct {
-	Id       int    `json:"id"`
-	Location string `json:"location"`
+	Id   int    `json:"id"`
+	Path string `json:"path"`
 }
 
 // 用于解析 json 文件

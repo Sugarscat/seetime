@@ -41,7 +41,7 @@ type TaskResponse struct {
 
 // SaveTaskInfo 保存任务信息
 func SaveTaskInfo(id int, task TaskData) bool {
-	file, _ := os.OpenFile(Tasks[id].Location+"config.json", os.O_WRONLY|os.O_CREATE, 0644)
+	file, _ := os.OpenFile(Tasks[id].Path+"config.json", os.O_WRONLY|os.O_CREATE, 0644)
 	defer file.Close()
 
 	json, _ := json.Marshal(task)
@@ -66,7 +66,7 @@ func RunTask(id int) bool {
 	}()
 
 	// 任务开始
-	run := "cd " + Tasks[id].Location + " && " + TaskInfo.Command
+	run := "cd " + Tasks[id].Path + " && " + TaskInfo.Command
 	cmd := exec.Command(runStart, runCode, run)
 	err := cmd.Start()
 	if err != nil {
@@ -83,14 +83,14 @@ func RunTask(id int) bool {
 func ReadTaskInfo(id int) TaskData {
 	var TaskInfo TaskData
 	// 读取任务配置
-	taskFile, _ := os.ReadFile(Tasks[id].Location + "config.json")
+	taskFile, _ := os.ReadFile(Tasks[id].Path + "config.json")
 	json.Unmarshal(taskFile, &TaskInfo)
 	return TaskInfo
 }
 
 // ReadTaskLog 读取任务日志
 func ReadTaskLog(id int) (data string, success bool) {
-	log, err := os.ReadFile(Tasks[id].Location + "log.log")
+	log, err := os.ReadFile(Tasks[id].Path + "log.log")
 	if err != nil {
 		return "null", false
 	} else {
@@ -155,9 +155,9 @@ func UpdateCron(id int, task TaskData, file *multipart.FileHeader, change bool, 
 
 	if change {
 		// 删除文件
-		os.Remove(Tasks[id].Location + task.File)
+		os.Remove(Tasks[id].Path + task.File)
 		// 将文件保存到服务器
-		filepath := filepath.Join(Tasks[id].Location, file.Filename)
+		filepath := filepath.Join(Tasks[id].Path, file.Filename)
 		ctx.SaveUploadedFile(file, filepath)
 		taskInfo.File = file.Filename
 	}
@@ -173,7 +173,7 @@ func UpdateCron(id int, task TaskData, file *multipart.FileHeader, change bool, 
 			}()
 
 			// 任务开始
-			run := "cd " + Tasks[id].Location + " && " + taskInfo.Command
+			run := "cd " + Tasks[id].Path + " && " + taskInfo.Command
 			cmd := exec.Command(runStart, runCode, run)
 			err := cmd.Start()
 			if err != nil {
