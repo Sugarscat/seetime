@@ -2,7 +2,7 @@
 
 ## What is SeeTime?
 
-A software that automates scheduled tasks.
+A software for managing scheduled tasks.
 
 ## Thanks for your contribution
 
