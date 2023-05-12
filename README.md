@@ -1,12 +1,14 @@
 # SeeTime
 
+## What is SeeTime?
+
 A software that automates scheduled tasks.
 
-## 鸣谢
+## Thanks for your contribution
 
-[Contributors](https://github.com/Sugarscat/seetime/graphs/contributors)
+[![Contributors](http://contributors.nn.ci/api?repo=Sugarscat/seetime)](https://github.com/Sugarscat/seetime/graphs/contributors)
 
-## 相关库
+## Libraries
 
 [Cobra](https://github.com/spf13/cobra) is a Commander for modern Go CLI interactions.
 
@@ -15,3 +17,9 @@ A software that automates scheduled tasks.
 [jwt-go](https://github.com/golang-jwt/jwt)
 
 A [cron](https://github.com/robfig/cron) library for go.
+
+## Special Thanks
+
+## Licensing
+
+The `SeeTime` is open-source software licensed under the [GPL-3.0](LICENSE) license.
