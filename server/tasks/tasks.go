@@ -113,7 +113,7 @@ func anyPermissions(requestId int) bool {
 	if account.ParsingPermissions(requestId, "deleteTask") {
 		return true
 	}
-	if account.ParsingPermissions(requestId, "updateTask") {
+	if account.ParsingPermissions(requestId, "exportTask") {
 		return true
 	}
 	return false
