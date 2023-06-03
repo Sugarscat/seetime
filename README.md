@@ -18,8 +18,8 @@ A software for managing scheduled tasks.
 
 A [cron](https://github.com/robfig/cron) library for go.
 
-## Special Thanks
-
 ## Licensing
 
 The `SeeTime` is open-source software licensed under the [GPL-3.0](LICENSE) license.
+
+## Special Thanks
