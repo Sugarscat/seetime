@@ -65,6 +65,9 @@ func SaveTasks() bool {
 
 func addTasksList() []TaskOneInfo {
 	var tasksList = make([]TaskOneInfo, 0, 1)
+	var tasksNotRun = make([]TaskOneInfo, 0, 1)
+	var tasksSuccess = make([]TaskOneInfo, 0, 1)
+	var tasksFail = make([]TaskOneInfo, 0, 1)
 	for _, task := range Tasks {
 		TaskInfo := ReadTaskInfo(task.Id)
 		taskOne := TaskOneInfo{
@@ -78,6 +81,21 @@ func addTasksList() []TaskOneInfo {
 		}
 		tasksList = append(tasksList, taskOne)
 	}
+	for _, task := range tasksList {
+		if !task.Run {
+			tasksNotRun = append(tasksNotRun, task)
+		} else {
+			if task.Success {
+				tasksSuccess = append(tasksSuccess, task)
+			} else {
+				tasksFail = append(tasksFail, task)
+			}
+		}
+	}
+	tasksList = make([]TaskOneInfo, 0, 1)
+	tasksList = append(tasksList, tasksFail...)
+	tasksList = append(tasksList, tasksSuccess...)
+	tasksList = append(tasksList, tasksNotRun...)
 	return tasksList
 }
 
@@ -129,14 +147,12 @@ func HandleTasksCount(ctx *gin.Context) {
 			ctx.JSON(200, gin.H{
 				"code":    200,
 				"success": true,
-				"message": "加载成功",
 				"data":    count.Count,
 			})
 		} else {
 			ctx.JSON(200, gin.H{
 				"code":    400,
 				"success": false,
-				"message": "没有权限",
 				"data":    nil,
 			})
 		}
@@ -146,7 +162,6 @@ func HandleTasksCount(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{
 		"code":    403,
 		"success": false,
-		"message": "身份令牌过期，请重新登录",
 		"data":    nil,
 	})
 }
@@ -178,7 +193,6 @@ func HandleTasksAdd(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"code":    429,
 			"success": false,
-			"message": "请求次数过多",
 			"data":    "null",
 		})
 		return
@@ -256,7 +270,6 @@ func HandleTasksDelete(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"code":    429,
 			"success": false,
-			"message": "请求次数过多",
 			"data":    "null",
 		})
 		return

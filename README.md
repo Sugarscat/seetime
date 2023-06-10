@@ -4,6 +4,10 @@
 
 A software for managing scheduled tasks.
 
+## Run the code
+
+    go run main.go start
+
 ## Thanks for your contribution
 
 [![Contributors](http://contributors.nn.ci/api?repo=Sugarscat/seetime)](https://github.com/Sugarscat/seetime/graphs/contributors)
