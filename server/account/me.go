@@ -18,43 +18,20 @@ type MeInfoData struct {
 type MeInfoResponse struct {
 	Code    int        `json:"code"`    // 返回代码
 	Success bool       `json:"success"` // 验证成功
-	Message string     `json:"message"` // 消息
 	Data    MeInfoData `json:"data"`
 }
 
 type MeUpdateResponse struct {
-	Code    int    `json:"code"`    // 返回代码
-	Success bool   `json:"success"` // 验证成功
-	Message string `json:"message"` // 消息
-}
-
-// AddMeInfoResponse 添加回复
-func AddMeInfoResponse(code int, success bool, message string, data MeInfoData) MeInfoResponse {
-	return MeInfoResponse{
-		Code:    code,
-		Success: success,
-		Message: message,
-		Data:    data,
-	}
-}
-
-func AddMeUpdateResponse(code int, success bool, message string) MeUpdateResponse {
-	return MeUpdateResponse{
-		Code:    code,
-		Success: success,
-		Message: message,
-	}
+	Code    int  `json:"code"`    // 返回代码
+	Success bool `json:"success"` // 验证成功
 }
 
 func UpdateMeInfo(id int, name string, password string) MeUpdateResponse {
 	lastName := Users[id].Name
 	lastPassword := Users[id].Password
-	if id == 0 && Users[id].Name != name { // 不可修改根管理用户名，防呆设计
-		return AddMeUpdateResponse(423, false, "不可修改根管理员用户名，如需修改请在服务器上修改文件")
-	}
 	for _, user := range Users {
 		if name == user.Name && user.Id != id {
-			return AddMeUpdateResponse(409, false, "重复用户名")
+			return MeUpdateResponse{409, false}
 		}
 	}
 	Users[id].Name = name
@@ -66,11 +43,12 @@ func UpdateMeInfo(id int, name string, password string) MeUpdateResponse {
 		// 若保存失败则回档
 		Users[id].Name = lastName
 		Users[id].Password = lastPassword
-		return AddMeUpdateResponse(500, false, "修改失败，请重试")
+		return MeUpdateResponse{500, false}
 	}
-	return AddMeUpdateResponse(200, true, "修改成功")
+	return MeUpdateResponse{200, true}
 }
 
+// HandleMe 获取个人资料
 func HandleMe(ctx *gin.Context) {
 	var code int
 	var response MeInfoResponse
@@ -80,27 +58,28 @@ func HandleMe(ctx *gin.Context) {
 
 	if success {
 		code = 200
-		response = AddMeInfoResponse(200, true, "认证成功", MeInfoData{
+		response = MeInfoResponse{200, true, MeInfoData{
 			id,
 			Users[id].Identity,
 			module.GetTime(Users[id].LastTime),
 			Users[id].LastIp,
 			Users[id].Permissions,
-		})
+		}}
 	} else {
 		code = 403
-		response = AddMeInfoResponse(403, false, "身份令牌过期，请重新登录", MeInfoData{
+		response = MeInfoResponse{403, false, MeInfoData{
 			-1,
 			false,
 			"",
 			"",
 			0,
-		})
+		}}
 	}
 
 	ctx.JSON(code, response)
 }
 
+// HandleMeUpdate 更新个人资料
 func HandleMeUpdate(ctx *gin.Context) {
 	var response MeUpdateResponse
 	name := ctx.PostForm("name")
@@ -112,7 +91,7 @@ func HandleMeUpdate(ctx *gin.Context) {
 	if success {
 		response = UpdateMeInfo(id, name, password)
 	} else {
-		response = AddMeUpdateResponse(403, false, "身份令牌过期，请重新登录")
+		response = MeUpdateResponse{403, false}
 	}
 
 	ctx.JSON(200, response)

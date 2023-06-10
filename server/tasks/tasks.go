@@ -34,7 +34,6 @@ type TasksList struct {
 type TasksResponse struct {
 	Code    int       `json:"code"`    // 返回代码
 	Success bool      `json:"success"` // 验证成功
-	Message string    `json:"message"` // 消息
 	Data    TasksList `json:"data"`
 }
 
@@ -82,11 +81,10 @@ func addTasksList() []TaskOneInfo {
 	return tasksList
 }
 
-func AddTasksResponse(code int, success bool, message string, tasksList []TaskOneInfo) TasksResponse {
+func AddTasksResponse(code int, success bool, tasksList []TaskOneInfo) TasksResponse {
 	return TasksResponse{
 		Code:    code,
 		Success: success,
-		Message: message,
 		Data: TasksList{
 			Total:   len(tasksList),
 			Content: tasksList,
@@ -162,13 +160,13 @@ func HandleTasks(ctx *gin.Context) {
 
 	if success {
 		if anyPermissions(requestId) {
-			response = AddTasksResponse(200, true, "加载成功", addTasksList())
+			response = AddTasksResponse(200, true, addTasksList())
 		} else {
-			response = AddTasksResponse(400, false, "没有权限", nil)
+			response = AddTasksResponse(400, false, nil)
 		}
 
 	} else {
-		response = AddTasksResponse(403, false, "身份令牌过期，请重新登录", nil)
+		response = AddTasksResponse(403, false, nil)
 	}
 
 	ctx.JSON(200, response)
@@ -220,7 +218,7 @@ func HandleTasksAdd(ctx *gin.Context) {
 
 			err := os.MkdirAll(task.Path, 0755)
 			if err != nil {
-				response = AddTasksResponse(500, false, "添加失败，请重试", addTasksList())
+				response = AddTasksResponse(500, false, addTasksList())
 				ctx.JSON(200, response)
 				return
 			}
@@ -233,20 +231,20 @@ func HandleTasksAdd(ctx *gin.Context) {
 
 			if SaveTasks() && SaveTaskInfo(task.Id, taskData) {
 				AddCron(task.Id)
-				response = AddTasksResponse(200, true, "添加成功", addTasksList())
+				response = AddTasksResponse(200, true, addTasksList())
 			} else {
 				// 添加失败后删除上传的信息
 				Tasks = append(Tasks[:task.Id], Tasks[task.Id+1:]...)
 				os.RemoveAll(task.Path)
-				response = AddTasksResponse(500, false, "添加失败，请重试", addTasksList())
+				response = AddTasksResponse(500, false, addTasksList())
 			}
 
 		} else {
-			response = AddTasksResponse(400, false, "没有权限", nil)
+			response = AddTasksResponse(400, false, nil)
 		}
 
 	} else {
-		response = AddTasksResponse(403, false, "身份令牌过期，请重新登录", nil)
+		response = AddTasksResponse(403, false, nil)
 	}
 
 	ctx.JSON(200, response)
@@ -280,7 +278,7 @@ func HandleTasksDelete(ctx *gin.Context) {
 						cron.Stop()
 					}
 					os.RemoveAll(lastTask.Path)
-					response = AddTasksResponse(200, true, "删除成功", addTasksList())
+					response = AddTasksResponse(200, true, addTasksList())
 					// 重载所有定时器
 					Crons = Crons[:0]
 					PlanningTasks()
@@ -292,16 +290,16 @@ func HandleTasksDelete(ctx *gin.Context) {
 					copy(newSlice[id+1:], Tasks[id:])
 					Tasks = newSlice
 					ReloadTasksInfo()
-					response = AddTasksResponse(500, false, "删除失败，请重试", addTasksList())
+					response = AddTasksResponse(500, false, addTasksList())
 				}
 			} else {
-				response = AddTasksResponse(404, false, "无此任务", addTasksList())
+				response = AddTasksResponse(404, false, addTasksList())
 			}
 		} else {
-			response = AddTasksResponse(400, false, "没有权限", nil)
+			response = AddTasksResponse(400, false, nil)
 		}
 	} else {
-		response = AddTasksResponse(403, false, "身份令牌过期，请重新登录", nil)
+		response = AddTasksResponse(403, false, nil)
 	}
 	ctx.JSON(200, response)
 }
@@ -316,15 +314,15 @@ func HandleTaskStop(ctx *gin.Context) {
 		if account.ParsingPermissions(requestId, "addTask") || account.ParsingPermissions(requestId, "updateTask") {
 			if id < len(Tasks) && id > -1 {
 				StopTask(id)
-				response = AddTasksResponse(200, true, "已停止任务", addTasksList())
+				response = AddTasksResponse(200, true, addTasksList())
 			} else {
-				response = AddTasksResponse(404, false, "无此任务", addTasksList())
+				response = AddTasksResponse(404, false, addTasksList())
 			}
 		} else {
-			response = AddTasksResponse(400, false, "没有权限", nil)
+			response = AddTasksResponse(400, false, nil)
 		}
 	} else {
-		response = AddTasksResponse(403, false, "身份令牌过期，请重新登录", nil)
+		response = AddTasksResponse(403, false, nil)
 	}
 	ctx.JSON(200, response)
 }
@@ -339,15 +337,15 @@ func HandleTaskActivate(ctx *gin.Context) {
 		if account.ParsingPermissions(requestId, "addTask") || account.ParsingPermissions(requestId, "updateTask") {
 			if id < len(Tasks) && id > -1 {
 				ActivateTask(id)
-				response = AddTasksResponse(200, true, "已开启任务", addTasksList())
+				response = AddTasksResponse(200, true, addTasksList())
 			} else {
-				response = AddTasksResponse(404, false, "无此任务", addTasksList())
+				response = AddTasksResponse(404, false, addTasksList())
 			}
 		} else {
-			response = AddTasksResponse(400, false, "没有权限", nil)
+			response = AddTasksResponse(400, false, nil)
 		}
 	} else {
-		response = AddTasksResponse(403, false, "身份令牌过期，请重新登录", nil)
+		response = AddTasksResponse(403, false, nil)
 	}
 	ctx.JSON(200, response)
 }
@@ -364,18 +362,18 @@ func HandleTasksRunOne(ctx *gin.Context) {
 		if account.ParsingPermissions(requestId, "addTask") || account.ParsingPermissions(requestId, "updateTask") {
 			if id < len(Tasks) && id > -1 {
 				if RunTask(id) {
-					response = AddTasksResponse(200, true, "执行成功", addTasksList())
+					response = AddTasksResponse(200, true, addTasksList())
 				} else {
-					response = AddTasksResponse(500, false, "执行失败", addTasksList())
+					response = AddTasksResponse(500, false, addTasksList())
 				}
 			} else {
-				response = AddTasksResponse(404, false, "无此任务", addTasksList())
+				response = AddTasksResponse(404, false, addTasksList())
 			}
 		} else {
-			response = AddTasksResponse(400, false, "没有权限", nil)
+			response = AddTasksResponse(400, false, nil)
 		}
 	} else {
-		response = AddTasksResponse(403, false, "身份令牌过期，请重新登录", nil)
+		response = AddTasksResponse(403, false, nil)
 	}
 
 	ctx.JSON(200, response)

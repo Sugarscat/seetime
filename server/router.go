@@ -26,7 +26,7 @@ func OpenRouter() {
 	{
 		api.GET("/system", HandleSystem)
 
-		api.GET("/login", account.HandleLogin)
+		api.PUT("/login", account.HandleLogin)
 
 		api.GET("/me", account.HandleMe)
 		api.PUT("/me", account.HandleMeUpdate)

@@ -10,7 +10,6 @@ import (
 type LoginResponse struct {
 	Code    int    `json:"code"`    // 返回代码
 	Success bool   `json:"success"` // 验证成功
-	Message string `json:"message"` // 消息
 	Id      int    `json:"id"`
 	Token   string `json:"token"`
 }
@@ -18,18 +17,16 @@ type LoginResponse struct {
 var refused = LoginResponse{
 	Code:    429,
 	Success: false,
-	Message: "请求次数过多",
 	Id:      -1,
 	Token:   "",
 }
 
 var bucket = module.NewLeakyBucket(6, 0.1) // 桶
 
-func AddLoginResponse(code int, success bool, message string, id int, token string) LoginResponse {
+func AddLoginResponse(code int, success bool, id int, token string) LoginResponse {
 	return LoginResponse{
 		Code:    code,
 		Success: success,
-		Message: message,
 		Id:      id,
 		Token:   token,
 	}
@@ -49,7 +46,7 @@ func checkInfo(name string, password string, ctx *gin.Context) LoginResponse {
 			Users[user.Id].ClientIp = ctx.ClientIP()
 			Users[user.Id].LastTime = Users[user.Id].LoginTime
 			Users[user.Id].LoginTime = time.Now().Unix()
-			response = AddLoginResponse(200, true, "验证成功", user.Id, token)
+			response = AddLoginResponse(200, true, user.Id, token)
 			return response
 		}
 		allowPass = false
@@ -61,17 +58,15 @@ func checkInfo(name string, password string, ctx *gin.Context) LoginResponse {
 		}
 	}
 
-	response = AddLoginResponse(404, false, "用户名或密码错误", -1, "")
+	response = AddLoginResponse(404, false, -1, "")
 	return response
 }
 
 // HandleLogin 登录
 func HandleLogin(ctx *gin.Context) {
-
-	name := ctx.Query("name")
-	password := ctx.Query("pwd")
+	name := ctx.PostForm("name")
+	password := ctx.PostForm("pwd")
 	response := checkInfo(name, password, ctx)
-
 	ctx.JSON(200, response)
 }
 

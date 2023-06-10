@@ -35,7 +35,6 @@ type TaskInfoData struct {
 type TaskResponse struct {
 	Code    int          `json:"code"`    // 返回代码
 	Success bool         `json:"success"` // 验证成功
-	Message string       `json:"message"` // 消息
 	Data    TaskInfoData `json:"data"`
 }
 
@@ -113,12 +112,11 @@ func ActivateTask(id int) {
 	Crons[id].Start()
 }
 
-func AddTaskResponse(code int, success bool, message string, id int) TaskResponse {
+func AddTaskResponse(code int, success bool, id int) TaskResponse {
 	if id == -1 {
 		return TaskResponse{
 			Code:    code,
 			Success: success,
-			Message: message,
 			Data: TaskInfoData{
 				Id: id,
 			},
@@ -128,7 +126,6 @@ func AddTaskResponse(code int, success bool, message string, id int) TaskRespons
 	return TaskResponse{
 		Code:    code,
 		Success: success,
-		Message: message,
 		Data: TaskInfoData{
 			Id:      id,
 			Name:    TaskInfo.Name,
@@ -201,15 +198,15 @@ func HandleTask(ctx *gin.Context) {
 	if success {
 		if account.Users[requestId].Identity {
 			if id < len(Tasks) && id > -1 {
-				response = AddTaskResponse(200, true, "查询成功", id)
+				response = AddTaskResponse(200, true, id)
 			} else {
-				response = AddTaskResponse(404, false, "无此任务", -1)
+				response = AddTaskResponse(404, false, -1)
 			}
 		} else {
-			response = AddTaskResponse(400, false, "没有权限", -1)
+			response = AddTaskResponse(400, false, -1)
 		}
 	} else {
-		response = AddTaskResponse(403, false, "身份令牌过期，请重新登录", -1)
+		response = AddTaskResponse(403, false, -1)
 	}
 
 	ctx.JSON(200, response)
@@ -221,7 +218,6 @@ func HandleTaskUpdate(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"code":    429,
 			"success": false,
-			"message": "请求次数过多",
 			"data":    "null",
 		})
 		return
@@ -254,15 +250,15 @@ func HandleTaskUpdate(ctx *gin.Context) {
 					File:    "",
 				}
 				UpdateCron(id, task, file, change, ctx)
-				response = AddTaskResponse(200, true, "修改成功", id)
+				response = AddTaskResponse(200, true, id)
 			} else {
-				response = AddTaskResponse(404, false, "无此任务", -1)
+				response = AddTaskResponse(404, false, -1)
 			}
 		} else {
-			response = AddTaskResponse(400, false, "没有权限", -1)
+			response = AddTaskResponse(400, false, -1)
 		}
 	} else {
-		response = AddTaskResponse(403, false, "身份令牌过期，请重新登录", -1)
+		response = AddTaskResponse(403, false, -1)
 	}
 
 	ctx.JSON(200, response)
@@ -283,14 +279,12 @@ func HandleTaskLog(ctx *gin.Context) {
 					response = gin.H{
 						"code":    200,
 						"success": true,
-						"message": "读取成功",
 						"data":    log,
 					}
 				} else {
 					response = gin.H{
 						"code":    404,
 						"success": false,
-						"message": "没有日志",
 						"data":    "没有日志",
 					}
 				}
@@ -298,7 +292,6 @@ func HandleTaskLog(ctx *gin.Context) {
 				response = gin.H{
 					"code":    404,
 					"success": false,
-					"message": "无此任务",
 					"data":    "null",
 				}
 			}
@@ -306,7 +299,6 @@ func HandleTaskLog(ctx *gin.Context) {
 			response = gin.H{
 				"code":    400,
 				"success": false,
-				"message": "没有权限",
 				"data":    "null",
 			}
 		}
@@ -314,7 +306,6 @@ func HandleTaskLog(ctx *gin.Context) {
 		response = gin.H{
 			"code":    403,
 			"success": false,
-			"message": "身份令牌过期，请重新登录",
 			"data":    "null",
 		}
 	}

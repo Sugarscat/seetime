@@ -14,7 +14,6 @@ type UsersListData struct {
 type UsersListResponse struct {
 	Code    int           `json:"code"`    // 返回代码
 	Success bool          `json:"success"` // 验证成功
-	Message string        `json:"message"` // 消息
 	Data    UsersListData `json:"data"`
 }
 
@@ -32,11 +31,10 @@ func addUsersList() []UserData {
 	return usersList
 }
 
-func AddUsersListResponse(code int, success bool, message string, userslist []UserData) UsersListResponse {
+func AddUsersListResponse(code int, success bool, userslist []UserData) UsersListResponse {
 	return UsersListResponse{
 		Code:    code,
 		Success: success,
-		Message: message,
 		Data: UsersListData{
 			Total:   len(userslist),
 			Content: userslist,
@@ -54,7 +52,7 @@ func checkUserName(id int, name string) bool {
 	return true
 }
 
-// ReloadUsersInfo 重载用户 id （用户 id 与切片下标有的很强依赖性）
+// ReloadUsersInfo 刷新用户 id （用户 id 与切片下标有的强依赖性）
 func ReloadUsersInfo() {
 	for id := range Users {
 		Users[id].Id = id
@@ -62,7 +60,7 @@ func ReloadUsersInfo() {
 }
 
 /*
-	在“用户管理“页面不可修改根管理员信息，防呆设计（避免用户修改信息导致无法登录）
+	在“用户管理“页面不可修改根管理员信息，避免用户修改信息后忘记导致无法登录
 */
 
 // UpdateUserInfo 更新用户信息
@@ -79,16 +77,16 @@ func UpdateUserInfo(id int, name string, password string, identity bool, permiss
 		Users[id].Identity = identity
 		Users[id].Permissions = permissions
 		if SaveInfo(-1) {
-			response = AddUsersListResponse(200, true, "修改成功", addUsersList())
+			response = AddUsersListResponse(200, true, addUsersList())
 		} else {
 			// 若保存失败则回档
 			Users[id].Name = lastName
 			Users[id].Identity = lsatIdentity
 			Users[id].Permissions = lastPermissions
-			response = AddUsersListResponse(500, false, "修改失败，请重试", addUsersList())
+			response = AddUsersListResponse(500, false, addUsersList())
 		}
 	} else {
-		response = AddUsersListResponse(409, false, "修改失败，重复用户名", addUsersList())
+		response = AddUsersListResponse(409, false, addUsersList())
 	}
 	return response
 }
@@ -104,13 +102,13 @@ func HandleUsersDelete(ctx *gin.Context) {
 		if Users[requestId].Identity {
 			if id < len(Users) && id > 0 {
 				if id == requestId { // 判断是否删除自己
-					response = AddUsersListResponse(400, false, "不可现登录用户", addUsersList())
+					response = AddUsersListResponse(400, false, addUsersList())
 				} else {
 					lastUser := Users[id]
 					Users = append(Users[:id], Users[id+1:]...)
 					ReloadUsersInfo()
 					if SaveInfo(-1) {
-						response = AddUsersListResponse(200, true, "删除成功", addUsersList())
+						response = AddUsersListResponse(200, true, addUsersList())
 					} else {
 						// 若保存失败则回档
 						newSlice := make([]User, len(Users)+1)
@@ -119,20 +117,20 @@ func HandleUsersDelete(ctx *gin.Context) {
 						copy(newSlice[id+1:], Users[id:])
 						Users = newSlice
 						ReloadUsersInfo()
-						response = AddUsersListResponse(500, false, "删除失败，请重试", addUsersList())
+						response = AddUsersListResponse(500, false, addUsersList())
 					}
 				}
 			} else if id == 0 { // 不可修改根管理员信息
-				response = AddUsersListResponse(423, false, "不可删除根管理员", addUsersList())
+				response = AddUsersListResponse(423, false, addUsersList())
 			} else {
-				response = AddUsersListResponse(404, false, "未找到该用户", addUsersList())
+				response = AddUsersListResponse(404, false, addUsersList())
 			}
 		} else {
-			response = AddUsersListResponse(400, false, "没有权限", nil)
+			response = AddUsersListResponse(400, false, nil)
 		}
 
 	} else {
-		response = AddUsersListResponse(403, false, "身份令牌过期，请重新登录", nil)
+		response = AddUsersListResponse(403, false, nil)
 	}
 
 	ctx.JSON(200, response)
@@ -154,15 +152,15 @@ func HandleUsersUpdate(ctx *gin.Context) {
 			if id < len(Users) && id > 0 {
 				response = UpdateUserInfo(id, name, password, identity, permissions)
 			} else if id == 0 { // 不可修改根管理员信息
-				response = AddUsersListResponse(423, false, "不可在此修改根管理员信息", addUsersList())
+				response = AddUsersListResponse(423, false, addUsersList())
 			} else {
-				response = AddUsersListResponse(404, false, "未找到该用户", addUsersList())
+				response = AddUsersListResponse(404, false, addUsersList())
 			}
 		} else {
-			response = AddUsersListResponse(400, false, "没有权限", nil)
+			response = AddUsersListResponse(400, false, nil)
 		}
 	} else {
-		response = AddUsersListResponse(403, false, "身份令牌过期，请重新登录", nil)
+		response = AddUsersListResponse(403, false, nil)
 	}
 
 	ctx.JSON(200, response)
@@ -195,21 +193,21 @@ func HandleUsersAdd(ctx *gin.Context) {
 				}
 				Users = append(Users, user)
 				if SaveInfo(-1) {
-					response = AddUsersListResponse(200, true, "添加成功", addUsersList())
+					response = AddUsersListResponse(200, true, addUsersList())
 				} else {
 					Users = append(Users[:user.Id], Users[user.Id+1:]...)
-					response = AddUsersListResponse(500, false, "添加失败，请重试", addUsersList())
+					response = AddUsersListResponse(500, false, addUsersList())
 				}
 			} else {
-				response = AddUsersListResponse(409, false, "添加失败，重复用户名", addUsersList())
+				response = AddUsersListResponse(409, false, addUsersList())
 			}
 
 		} else {
-			response = AddUsersListResponse(400, false, "没有权限", nil)
+			response = AddUsersListResponse(400, false, nil)
 		}
 
 	} else {
-		response = AddUsersListResponse(403, false, "身份令牌过期，请重新登录", nil)
+		response = AddUsersListResponse(403, false, nil)
 	}
 
 	ctx.JSON(200, response)
@@ -224,13 +222,13 @@ func HandleUsers(ctx *gin.Context) {
 
 	if success {
 		if Users[requestId].Identity {
-			response = AddUsersListResponse(200, true, "加载成功", addUsersList())
+			response = AddUsersListResponse(200, true, addUsersList())
 		} else {
-			response = AddUsersListResponse(400, false, "没有权限", nil)
+			response = AddUsersListResponse(400, false, nil)
 		}
 
 	} else {
-		response = AddUsersListResponse(403, false, "身份令牌过期，请重新登录", nil)
+		response = AddUsersListResponse(403, false, nil)
 	}
 
 	ctx.JSON(200, response)
